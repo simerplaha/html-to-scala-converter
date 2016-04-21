@@ -90,7 +90,7 @@ object HtmlToScalaTagsConverter {
 
 
   def runConverter(converterType: ConverterType) = {
-    val wrapper = "tempHtmlCodeWrapper" //helpful when the input HTML does not have a root container node.
+    val wrapper = "temphtmlcodewrapper" //helpful when the input HTML does not have a root container node.
     val htmlCodeString = s"<$wrapper>" + encodeHtml(dom.document.getElementById("htmlCode").asInstanceOf[TextArea].value) + s"</$wrapper>"
 //    val parsedHtml: Document = new DOMParser().parseFromString(htmlCodeString, "text/html")
 //    println(parsedHtml)
