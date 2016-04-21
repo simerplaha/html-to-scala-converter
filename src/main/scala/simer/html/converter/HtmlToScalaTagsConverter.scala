@@ -28,7 +28,7 @@ object HtmlToScalaTagsConverter {
               h4("HTML")
             ),
             th(width := "50%")(
-              h4("Scala")
+              h4("Scalatags")
             )
           ),
           tr(width := "100%")(
@@ -47,10 +47,10 @@ object HtmlToScalaTagsConverter {
                   |    </a>
                   |    <ul class="dropdown-menu">
                   |       <li>
-                  |           <a href="home.html">Home</a>
+                  |           List item 1
                   |       </li>
                   |       <li>
-                  |           <a href="contact.html">Contact</a>
+                  |           List item 2
                   |       </li>
                   |    </ul>
                   |    <script>
@@ -106,7 +106,7 @@ object HtmlToScalaTagsConverter {
           val wrapperMatcher = s"\\<\\.$wrapper\\(|$wrapper\\("
           scalaCode.replaceFirst(wrapperMatcher, "").dropRight(1)
       }
-    scalaCodeTextArea.value = outputScalaTagsCode
+    scalaCodeTextArea.value = outputScalaTagsCode.trim
   }
 
   def toScalaTags(node: Node, converterType: ConverterType): String = {
@@ -153,7 +153,7 @@ object HtmlToScalaTagsConverter {
         if (children.isEmpty)
           children
         else if (attributes.isEmpty)
-          children + "\n"
+          "\n" + children + "\n"
         else
           ")(\n" + children + "\n"
       })"
