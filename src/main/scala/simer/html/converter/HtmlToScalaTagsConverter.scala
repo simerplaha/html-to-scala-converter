@@ -19,7 +19,7 @@ object HtmlToScalaTagsConverter {
       div(
         ul(
           li(
-            a(cls := "HTML TO SCALATAGS CONVERT", href := "#")("HTML TO SCALATAGS CONVERTER")
+            a(href := "#")("HTML TO SCALATAGS CONVERTER")
           )
         ),
         table(width := "100%")(
