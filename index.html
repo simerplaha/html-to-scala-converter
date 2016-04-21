@@ -1,1 +1,20 @@
-Demo page
+<!DOCTYPE html>
+<html>
+<head>
+    <title>HTML to Scalatags converter</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body style="margin: 0px">
+
+<div>
+    <div style="display: block" id="content"/>
+</div>
+
+<script type="text/javascript" src="HtmlToScalaTagsConverter-opt.js"></script>
+<script>
+    simer.html.converter.HtmlToScalaTagsConverter().main(document.getElementById('content'));
+</script>
+</body>
+</html>
