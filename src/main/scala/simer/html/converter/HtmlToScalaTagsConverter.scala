@@ -2,7 +2,7 @@ package simer.html.converter
 
 import org.scalajs.dom
 import org.scalajs.dom.html.TextArea
-import org.scalajs.dom.raw.{DOMParser, Node}
+import org.scalajs.dom.raw.{DOMParser, Document, Node}
 import org.scalajs.dom.{NamedNodeMap, NodeList, html}
 
 import scala.scalajs.js
@@ -54,7 +54,7 @@ object HtmlToScalaTagsConverter {
                   |       </li>
                   |    </ul>
                   |    <script>
-                  |       document.getElementById("color:mediumblue">"demo").innerHTML = "color:mediumblue">"Hello Scala.js!";
+                  |       document.getElementById("someId").value = "Hello Scala.js!";
                   |    </script>
                   |</div>""".stripMargin
               )
@@ -91,8 +91,10 @@ object HtmlToScalaTagsConverter {
 
   def runConverter(converterType: ConverterType) = {
     val wrapper = "tempHtmlCodeWrapper" //helpful when the input HTML does not have a root container node.
-    val htmlCodeString = s"<$wrapper>" + dom.document.getElementById("htmlCode").asInstanceOf[TextArea].value + s"</$wrapper>"
-    val parsedXml = new DOMParser().parseFromString(htmlCodeString, "text/xml")
+    val htmlCodeString = s"<$wrapper>" + encodeHtml(dom.document.getElementById("htmlCode").asInstanceOf[TextArea].value) + s"</$wrapper>"
+//    val parsedHtml: Document = new DOMParser().parseFromString(htmlCodeString, "text/html")
+//    println(parsedHtml)
+    val parsedXml: Document = new DOMParser().parseFromString(htmlCodeString, "text/xml")
     val scalaCodeTextArea = dom.document.getElementById("scalaTagsCode").asInstanceOf[TextArea]
     val rootWrapperNode = parsedXml.childNodes.item(0)
     val outputScalaTagsCode =
@@ -122,14 +124,15 @@ object HtmlToScalaTagsConverter {
       } else {
         node.attributes.map {
           case (key, value) =>
+            val escapedValue = escapeString(value)
             if (key == "class")
-              s"${attributePrefix + classAttributeKey} := ${s""""$value""""}"
+              s"${attributePrefix + classAttributeKey + ":=" + escapedValue}"
             else if (key == "for" || key == "type")
-              s"$attributePrefix`$key` := ${s""""$value""""}"
+              s"$attributePrefix`$key` := $escapedValue"
             else if (key.contains("-"))
-              s""""$key".$customAttributePostfix := ${s""""$value""""}"""
+              s""""$key".$customAttributePostfix := $escapedValue"""
             else
-              s"$attributePrefix$key := ${s""""$value""""}"
+              s"$attributePrefix$key := $escapedValue"
         }.mkString(", ")
       }
     }
@@ -142,14 +145,9 @@ object HtmlToScalaTagsConverter {
     if (js.isUndefined(node))
       ""
     else if (node.nodeName == "#text")
-      node.nodeValue.trim match {
-        case nodeValue if node.nodeValue.trim.contains("\"") =>
-          s"""\"\"\"$nodeValue\"\"\""""
-        case nodeValue =>
-          s""""$nodeValue""""
-      }
+      escapeString(node.nodeValue)
     else {
-      s"${nodePrefix + node.nodeName}($attributes${
+      s"${nodePrefix + node.nodeName.toLowerCase}($attributes${
         if (children.isEmpty)
           children
         else if (attributes.isEmpty)
@@ -158,5 +156,23 @@ object HtmlToScalaTagsConverter {
           ")(\n" + children + "\n"
       })"
     }
+  }
+
+  def escapeString(string: String): String = {
+    string.trim match {
+      case string if string.contains("\"") =>
+        s"""\"\"\"$string\"\"\""""
+      case string =>
+        s""""$string""""
+    }
+  }
+
+  def encodeHtml(string: String): String = {
+    string
+    //      .replaceAll("&", "&amp;")
+    //      .replaceAll("<", "&lt;")
+    //      .replaceAll(">", "&gt;")
+    //      .replaceAll(""""""", "&quot;")
+    //      .replaceAll("'", "&apos;")
   }
 }
