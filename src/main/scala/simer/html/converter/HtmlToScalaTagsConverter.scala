@@ -33,20 +33,34 @@ object HtmlToScalaTagsConverter {
           ),
           tr(width := "100%")(
             td(width := "50%")(
-              textarea(id := "htmlCode", cls := "boxsizingBorder", width := "100%", rows := 20, placeholder := "Enter your HTML code here.")(
+              textarea(id := "htmlCode", cls := "boxsizingBorder", width := "100%", rows := 26, placeholder := "Enter your HTML code here.")(
                 """<div class="myClass">
                   |    <div class="someClass" data-attribute="someValue">
                   |        <button type="button" class="btn btn-default">Button</button>
                   |    </div>
                   |    <br/>
-                  |    <p>
-                  |       My paragraph
-                  |    </p>
+                  |    <span>
+                  |       <img class="my-img-class" src="assets/images/image1.jpg" alt=""/>
+                  |    </span>
+                  |    <a href="javascript:void(0);" class="my-class" data-toggle="dropdown">
+                  |       Some link
+                  |    </a>
+                  |    <ul class="dropdown-menu">
+                  |       <li>
+                  |           <a href="home.html">Home</a>
+                  |       </li>
+                  |       <li>
+                  |           <a href="contact.html">Contact</a>
+                  |       </li>
+                  |    </ul>
+                  |    <script>
+                  |       document.getElementById("color:mediumblue">"demo").innerHTML = "color:mediumblue">"Hello Scala.js!";
+                  |    </script>
                   |</div>""".stripMargin
               )
             ),
             td(width := "50%")(
-              textarea(id := "scalaTagsCode", cls := "boxsizingBorder", width := "100%", rows := 20, placeholder := "Scala code will be generated here.")
+              textarea(id := "scalaTagsCode", cls := "boxsizingBorder", width := "100%", rows := 26, placeholder := "Scala code will be generated here.")
             )
           ),
           tr(width := "100%")(
