@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e568573a-d9e5-4559-8afd-e3d27206f565" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/modules/html-to-scalatags-converter.iml" afterPath="$PROJECT_DIR$/.idea/modules/html-to-scalatags-converter.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/scala/simer/html/converter/HtmlToScalaTagsConverter.scala" afterPath="$PROJECT_DIR$/src/main/scala/simer/html/converter/HtmlToScalaTagsConverter.scala" />
     </list>
     <ignored path="workbench-example-app.iws" />
@@ -44,8 +42,8 @@
       <file leaf-file-name="HtmlToScalaTagsConverter.scala" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/scala/simer/html/converter/HtmlToScalaTagsConverter.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="564">
-              <caret line="55" column="31" selection-start-line="55" selection-start-column="31" selection-end-line="55" selection-end-column="31" />
+            <state relative-caret-position="414">
+              <caret line="103" column="17" selection-start-line="103" selection-start-column="17" selection-end-line="103" selection-end-column="17" />
               <folding />
             </state>
           </provider>
@@ -964,12 +962,12 @@
       <workItem from="1461230992199" duration="26041000" />
       <workItem from="1461347414120" duration="8306000" />
       <workItem from="1461356896485" duration="1421000" />
-      <workItem from="1461500370461" duration="6524000" />
+      <workItem from="1461500370461" duration="6636000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="69446000" />
+    <option name="totallyTimeSpent" value="69558000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1920" height="1133" extended-state="6" />
@@ -1327,8 +1325,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/simer/html/converter/HtmlToScalaTagsConverter.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="564">
-          <caret line="55" column="31" selection-start-line="55" selection-start-column="31" selection-end-line="55" selection-end-column="31" />
+        <state relative-caret-position="414">
+          <caret line="103" column="17" selection-start-line="103" selection-start-column="17" selection-end-line="103" selection-end-column="17" />
           <folding />
         </state>
       </provider>

@@ -91,9 +91,9 @@ object HtmlToScalaTagsConverter {
 
   def runConverter(converterType: ConverterType) = {
     val htmlCode = dom.document.getElementById("htmlCode").asInstanceOf[TextArea].value
-    val parsedXml = new DOMParser().parseFromString(htmlCode, "text/html")
+    val parsedHtml = new DOMParser().parseFromString(htmlCode, "text/html")
     val scalaCodeTextArea = dom.document.getElementById("scalaTagsCode").asInstanceOf[TextArea]
-    val rootWrapperNode = parsedXml.childNodes.item(0)
+    val rootWrapperNode = parsedHtml.childNodes.item(0)
     val outputScalaTagsCode = toScalaTags(rootWrapperNode, converterType)
     scalaCodeTextArea.value = outputScalaTagsCode.trim
   }
