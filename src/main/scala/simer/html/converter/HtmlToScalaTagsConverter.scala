@@ -40,7 +40,7 @@ object HtmlToScalaTagsConverter {
                   |    </div>
                   |    <br/>
                   |    <span>
-                  |       <img class="my-img-class" src="assets/images/image1.jpg" alt=""/>
+                  |       <img class="my-img-class" src="assets/images/image1.jpg" onclick='alert("clicked!");' alt=""/>
                   |    </span>
                   |    <a href="javascript:void(0);" class="my-class" data-toggle="dropdown">
                   |       Some link
@@ -161,7 +161,7 @@ object HtmlToScalaTagsConverter {
       case (outputString, (tagName, toRemove)) =>
         toRemove match {
           case true =>
-            val removedTagString = outputString.replaceFirst(s"$tagName.+", "").trim
+            val removedTagString = outputString.replaceFirst(s".*$tagName.+", "").trim
             if (tagName != "head") {
               removedTagString.dropRight(1)
             } else
