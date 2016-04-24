@@ -93,10 +93,13 @@ object HtmlToScalaTagsConverter {
     val htmlCode = dom.document.getElementById("htmlCode").asInstanceOf[TextArea].value
     val parsedHtml = new DOMParser().parseFromString(htmlCode, "text/html")
     val scalaCodeTextArea = dom.document.getElementById("scalaTagsCode").asInstanceOf[TextArea]
-    val rootWrapperNode = parsedHtml.childNodes.item(0)
-    val outputScalaTagsCode = toScalaTags(rootWrapperNode, converterType)
-    scalaCodeTextArea.value = outputScalaTagsCode.trim
+    val htmlTagNode = parsedHtml.childNodes.item(0)
+    val outputScalaTagsCode = toScalaTags(htmlTagNode, converterType)
+    val outputScalaTagsCodeRemovedParserAddedTags = removeParserAddedTags(htmlCode, outputScalaTagsCode)
+    scalaCodeTextArea.value = outputScalaTagsCodeRemovedParserAddedTags.trim
   }
+
+
 
 
   def toScalaTags(node: Node, converterType: ConverterType): String = {
@@ -112,7 +115,7 @@ object HtmlToScalaTagsConverter {
       } else {
         node.attributes.map {
           case (key, value) =>
-            val escapedValue = trippleQuoteString(value)
+            val escapedValue = tripleQuoteString(value)
             if (key == "class")
               s"${attributePrefix + classAttributeKey + ":=" + escapedValue}"
             else if (key == "for" || key == "type")
@@ -133,7 +136,7 @@ object HtmlToScalaTagsConverter {
     if (js.isUndefined(node))
       ""
     else if (node.nodeName == "#text")
-      trippleQuoteString(node.nodeValue)
+      tripleQuoteString(node.nodeValue)
     else {
       s"${nodePrefix + node.nodeName.toLowerCase}($attributes${
         if (children.isEmpty)
@@ -146,7 +149,30 @@ object HtmlToScalaTagsConverter {
     }
   }
 
-  def trippleQuoteString(string: String): String = {
+  /**
+    * The html parser seems to add html, head and body tags the parsed tree. This code will remove the ones
+    */
+  def removeParserAddedTags(htmlCode: String, scalaCode: String): String = {
+    val removeHtmlTag = "(?i)<html".r.findFirstMatchIn(htmlCode).isEmpty
+    val removeHeadTag = "(?i)<head".r.findFirstMatchIn(htmlCode).isEmpty
+    val removeBodyTag = "(?i)<body".r.findFirstMatchIn(htmlCode).isEmpty
+
+    Map("html" -> removeHtmlTag, "head" -> removeHeadTag, "body" -> removeBodyTag).foldLeft(scalaCode) {
+      case (outputString, (tagName, toRemove)) =>
+        toRemove match {
+          case true =>
+            val removedTagString = outputString.replaceFirst(s"$tagName.+", "").trim
+            if (tagName != "head") {
+              removedTagString.dropRight(1)
+            } else
+              removedTagString
+          case _ =>
+            outputString
+        }
+    }
+  }
+
+  def tripleQuoteString(string: String): String = {
     string.trim match {
       case string if string.contains("\"") || string.contains("\n") || string.contains("\\") =>
         s"""\"\"\"$string\"\"\""""
