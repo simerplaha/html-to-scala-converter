@@ -50,7 +50,7 @@ object HtmlToScalaTagsConverter {
                   |           List item 1
                   |       </li>
                   |       <li>
-                  |           List item 2
+                  |           List&nbsp;item&nbsp;2
                   |       </li>
                   |    </ul>
                   |    <script>
@@ -90,26 +90,14 @@ object HtmlToScalaTagsConverter {
 
 
   def runConverter(converterType: ConverterType) = {
-    val wrapper = "temphtmlcodewrapper" //helpful when the input HTML does not have a root container node.
-    val htmlCodeString = s"<$wrapper>" + encodeHtml(dom.document.getElementById("htmlCode").asInstanceOf[TextArea].value) + s"</$wrapper>"
-//    val parsedHtml: Document = new DOMParser().parseFromString(htmlCodeString, "text/html")
-//    println(parsedHtml)
-    val parsedXml: Document = new DOMParser().parseFromString(htmlCodeString, "text/xml")
+    val htmlCode = dom.document.getElementById("htmlCode").asInstanceOf[TextArea].value
+    val parsedXml = new DOMParser().parseFromString(htmlCode, "text/html")
     val scalaCodeTextArea = dom.document.getElementById("scalaTagsCode").asInstanceOf[TextArea]
     val rootWrapperNode = parsedXml.childNodes.item(0)
-    val outputScalaTagsCode =
-      rootWrapperNode.firstChild match {
-        case firstChild if js.isUndefined(rootWrapperNode.firstChild) =>
-          ""
-        case firstChild if rootWrapperNode.firstChild.nodeName == "parsererror" =>
-          "Parse error: \n" + firstChild.textContent
-        case _ =>
-          val scalaCode = toScalaTags(rootWrapperNode, converterType)
-          val wrapperMatcher = s"\\<\\.$wrapper\\(|$wrapper\\("
-          scalaCode.replaceFirst(wrapperMatcher, "").dropRight(1)
-      }
+    val outputScalaTagsCode = toScalaTags(rootWrapperNode, converterType)
     scalaCodeTextArea.value = outputScalaTagsCode.trim
   }
+
 
   def toScalaTags(node: Node, converterType: ConverterType): String = {
 
@@ -124,12 +112,12 @@ object HtmlToScalaTagsConverter {
       } else {
         node.attributes.map {
           case (key, value) =>
-            val escapedValue = escapeString(value)
+            val escapedValue = trippleQuoteString(value)
             if (key == "class")
               s"${attributePrefix + classAttributeKey + ":=" + escapedValue}"
             else if (key == "for" || key == "type")
               s"$attributePrefix`$key` := $escapedValue"
-            else if (key.contains("-"))
+            else if (!key.matches("[a-zA-Z0-9]*$"))
               s""""$key".$customAttributePostfix := $escapedValue"""
             else
               s"$attributePrefix$key := $escapedValue"
@@ -145,7 +133,7 @@ object HtmlToScalaTagsConverter {
     if (js.isUndefined(node))
       ""
     else if (node.nodeName == "#text")
-      escapeString(node.nodeValue)
+      trippleQuoteString(node.nodeValue)
     else {
       s"${nodePrefix + node.nodeName.toLowerCase}($attributes${
         if (children.isEmpty)
@@ -158,21 +146,12 @@ object HtmlToScalaTagsConverter {
     }
   }
 
-  def escapeString(string: String): String = {
+  def trippleQuoteString(string: String): String = {
     string.trim match {
-      case string if string.contains("\"") =>
+      case string if string.contains("\"") || string.contains("\n") || string.contains("\\") =>
         s"""\"\"\"$string\"\"\""""
       case string =>
         s""""$string""""
     }
-  }
-
-  def encodeHtml(string: String): String = {
-    string
-    //      .replaceAll("&", "&amp;")
-    //      .replaceAll("<", "&lt;")
-    //      .replaceAll(">", "&gt;")
-    //      .replaceAll(""""""", "&quot;")
-    //      .replaceAll("'", "&apos;")
   }
 }
