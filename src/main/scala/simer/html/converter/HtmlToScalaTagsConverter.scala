@@ -2,7 +2,7 @@ package simer.html.converter
 
 import org.scalajs.dom
 import org.scalajs.dom.html.TextArea
-import org.scalajs.dom.raw.{DOMParser, Document, Node}
+import org.scalajs.dom.raw.{DOMParser, Node}
 import org.scalajs.dom.{NamedNodeMap, NodeList, html}
 
 import scala.scalajs.js
@@ -11,6 +11,10 @@ import scalatags.JsDom.all._
 
 @JSExport
 object HtmlToScalaTagsConverter {
+
+  @JSExport
+  def main(mainDiv: html.Div): Unit =
+    mainDiv.appendChild(content.render)
 
   val content =
     div(
@@ -70,22 +74,17 @@ object HtmlToScalaTagsConverter {
       )
     )
 
-  @JSExport
-  def main(mainDiv: html.Div): Unit =
-    mainDiv.appendChild(content.render)
-
 
   implicit def asAttrMap(nodeMap: NamedNodeMap): IndexedSeq[(String, String)] = {
     for (i <- 0 until nodeMap.length)
       yield (nodeMap.item(i).name, nodeMap.item(i).value)
   }
 
-  implicit def childNodes(childNodes: NodeList): IndexedSeq[Node] = {
+  implicit def childNodes(childNodes: NodeList): IndexedSeq[Node] =
     if (js.isUndefined(childNodes))
       IndexedSeq.empty[Node]
     else
       for (i <- 0 until childNodes.length) yield childNodes.item(i)
-  }
 
   def runConverter(converterType: ConverterType) = {
     val htmlCode = dom.document.getElementById("htmlCode").asInstanceOf[TextArea].value
@@ -98,7 +97,6 @@ object HtmlToScalaTagsConverter {
   }
 
   def toScalaTags(node: Node, converterType: ConverterType): String = {
-
     val attributePrefix = converterType.attributePrefix
     val classAttributeKey = converterType.classAttributeKey
     val customAttributePostfix = converterType.customAttributePostfix
@@ -123,31 +121,43 @@ object HtmlToScalaTagsConverter {
       }
     }
 
-    val children = node.childNodes
+    //gets rid of all comments and text node which are empty
+    val childrenWithoutGarbageNodes = node.childNodes
       .filterNot(node => node.nodeName == "#comment" || (node.nodeName == "#text" && node.nodeValue.trim.isEmpty))
+
+    val children = childrenWithoutGarbageNodes
       .map(toScalaTags(_, converterType))
       .mkString(",\n")
 
-    if (js.isUndefined(node))
-      ""
-    else if (node.nodeName == "#text")
+    //text nodes can be a part of the same List as the attribute List.
+    val isChildNodeATextNode = childrenWithoutGarbageNodes.nonEmpty && childrenWithoutGarbageNodes.head.nodeName == "#text"
+
+    if (node.nodeName == "#text")
       tripleQuoteString(node.nodeValue)
-    else if(attributes.isEmpty && children.isEmpty)
+    else if (attributes.isEmpty && children.isEmpty)
       s"${nodePrefix + node.nodeName.toLowerCase}"
     else {
       s"${nodePrefix + node.nodeName.toLowerCase}($attributes${
         if (children.isEmpty)
-          children
-        else if (attributes.isEmpty)
-          "\n" + children + "\n"
-        else
-          ",\n" + children + "\n"
+          ""
+        else {
+          val commaMayBe = if (attributes.isEmpty) "" else ","
+          val startNewLineMayBe = if (isChildNodeATextNode) "" else "\n"
+          //add a newLine at the end if this node has more then one child nodes.
+          val endNewLineMayBe = if (isChildNodeATextNode && childrenWithoutGarbageNodes.size <= 1) "" else "\n"
+          s"$commaMayBe$startNewLineMayBe$children$endNewLineMayBe"
+        }
       })"
     }
   }
 
   /**
-    * The html parser seems to add html, head and body tags the parsed tree. This code will remove the ones
+    * The javascript html parser seems to add html, head and body tags the parsed tree by default.
+    * This code will remove the ones that are not in the input HTML.
+    *
+    * TODO: Do this in the javascript parsed tree before generating scala code instead of operating on the
+    * scala generated code.
+    * (Will leave this as is for now because it's easier this way then working with Javascript's untyped API)
     */
   def removeParserAddedTags(htmlCode: String, scalaCode: String): String = {
     val removeHtmlTag = "(?i)<html".r.findFirstMatchIn(htmlCode).isEmpty
