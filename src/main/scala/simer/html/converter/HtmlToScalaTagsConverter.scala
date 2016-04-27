@@ -103,6 +103,9 @@ object HtmlToScalaTagsConverter {
     scalaCodeTextArea.value = outputScalaTagsCodeRemovedParserAddedTags.trim
   }
 
+  /**
+    * TODO: Yuk! Simplify this code.
+    */
   def toScalaTags(node: Node, converterType: ConverterType, inlineAttributes: Boolean): String = {
     val attributePrefix = converterType.attributePrefix
     val classAttributeKey = converterType.classAttributeKey
