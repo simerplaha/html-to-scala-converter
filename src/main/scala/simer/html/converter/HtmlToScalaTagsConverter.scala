@@ -1,7 +1,7 @@
 package simer.html.converter
 
 import org.scalajs.dom
-import org.scalajs.dom.html.TextArea
+import org.scalajs.dom.html.{Input, TextArea}
 import org.scalajs.dom.raw.{DOMParser, Node}
 import org.scalajs.dom.{NamedNodeMap, NodeList, html}
 
@@ -66,6 +66,12 @@ object HtmlToScalaTagsConverter {
         ),
         tr(width := "100%")(
           td(colspan := "2", textAlign := "center")(
+            span("Add attributes on new line: "),
+            input(id := "newlineAttributes", cls := "myButton", `type` := "checkbox")
+          )
+        ),
+        tr(width := "100%")(
+          td(colspan := "2", textAlign := "center")(
             button(cls := "myButton", onclick := { () => runConverter(ReactScalaTagsConverter) })("Convert to Scalajs-React's Scalatags"),
             span("  "),
             button(cls := "myButton", onclick := { () => runConverter(ScalaTagsConverter) })("Convert to Scalatags")
@@ -90,13 +96,14 @@ object HtmlToScalaTagsConverter {
     val htmlCode = dom.document.getElementById("htmlCode").asInstanceOf[TextArea].value
     val parsedHtml = new DOMParser().parseFromString(htmlCode, "text/html")
     val scalaCodeTextArea = dom.document.getElementById("scalaTagsCode").asInstanceOf[TextArea]
+    val newlineAttributes = dom.document.getElementById("newlineAttributes").asInstanceOf[Input]
     val htmlTagNode = parsedHtml.childNodes.item(0)
-    val outputScalaTagsCode = toScalaTags(htmlTagNode, converterType)
+    val outputScalaTagsCode = toScalaTags(htmlTagNode, converterType, !newlineAttributes.checked)
     val outputScalaTagsCodeRemovedParserAddedTags = removeParserAddedTags(htmlCode, outputScalaTagsCode)
     scalaCodeTextArea.value = outputScalaTagsCodeRemovedParserAddedTags.trim
   }
 
-  def toScalaTags(node: Node, converterType: ConverterType): String = {
+  def toScalaTags(node: Node, converterType: ConverterType, inlineAttributes: Boolean): String = {
     val attributePrefix = converterType.attributePrefix
     val classAttributeKey = converterType.classAttributeKey
     val customAttributePostfix = converterType.customAttributePostfix
@@ -106,18 +113,23 @@ object HtmlToScalaTagsConverter {
       if (js.isUndefined(node) || js.isUndefined(node.attributes) || node.attributes.length == 0) {
         ""
       } else {
-        node.attributes.map {
-          case (key, value) =>
-            val escapedValue = tripleQuoteString(value)
-            if (key == "class")
-              s"${attributePrefix + classAttributeKey + ":=" + escapedValue}"
-            else if (key == "for" || key == "type")
-              s"$attributePrefix`$key` := $escapedValue"
-            else if (!key.matches("[a-zA-Z0-9]*$"))
-              s""""$key".$customAttributePostfix := $escapedValue"""
-            else
-              s"$attributePrefix$key := $escapedValue"
-        }.mkString(", ")
+        val attributesMap =
+          node.attributes.map {
+            case (key, value) =>
+              val escapedValue = tripleQuoteString(value)
+              if (key == "class")
+                s"${attributePrefix + classAttributeKey + " := " + escapedValue}"
+              else if (key == "for" || key == "type")
+                s"$attributePrefix`$key` := $escapedValue"
+              else if (!key.matches("[a-zA-Z0-9]*$"))
+                s""""$key".$customAttributePostfix := $escapedValue"""
+              else
+                s"$attributePrefix$key := $escapedValue"
+          }
+        if (!inlineAttributes)
+          attributesMap.mkString("\n", ",\n", "")
+        else
+          attributesMap.mkString(", ")
       }
     }
 
@@ -126,10 +138,10 @@ object HtmlToScalaTagsConverter {
       .filterNot(node => node.nodeName == "#comment" || (node.nodeName == "#text" && node.nodeValue.trim.isEmpty))
 
     val children = childrenWithoutGarbageNodes
-      .map(toScalaTags(_, converterType))
+      .map(toScalaTags(_, converterType, inlineAttributes))
       .mkString(",\n")
 
-    //text nodes can be a part of the same List as the attribute List.
+    //text child nodes can be a part of the same List as the attribute List. They don't have to go to a new line.
     val isChildNodeATextNode = childrenWithoutGarbageNodes.nonEmpty && childrenWithoutGarbageNodes.head.nodeName == "#text"
 
     if (node.nodeName == "#text")
@@ -142,8 +154,8 @@ object HtmlToScalaTagsConverter {
           ""
         else {
           val commaMayBe = if (attributes.isEmpty) "" else ","
-          val startNewLineMayBe = if (isChildNodeATextNode) "" else "\n"
-          //add a newLine at the end if this node has more then one child nodes.
+          val startNewLineMayBe = if (isChildNodeATextNode && (inlineAttributes || attributes.isEmpty)) "" else "\n"
+          //add a newLine at the end if this node has more then one child nodes
           val endNewLineMayBe = if (isChildNodeATextNode && childrenWithoutGarbageNodes.size <= 1) "" else "\n"
           s"$commaMayBe$startNewLineMayBe$children$endNewLineMayBe"
         }
