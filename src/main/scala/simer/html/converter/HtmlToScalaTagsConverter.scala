@@ -12,68 +12,67 @@ import scalatags.JsDom.all._
 @JSExport
 object HtmlToScalaTagsConverter {
 
-  @JSExport
-  def main(mainDiv: html.Div): Unit = {
-
-    val content =
-      div(
-        ul(
-          li(
-            a(href := "#")("HTML TO SCALATAGS CONVERTER")
+  val content =
+    div(
+      ul(
+        li(
+          a(href := "#")("HTML TO SCALATAGS CONVERTER")
+        )
+      ),
+      table(width := "100%")(
+        tr(width := "100%")(
+          th(width := "50%")(
+            h4("HTML")
+          ),
+          th(width := "50%")(
+            h4("Scalatags")
           )
         ),
-        table(width := "100%")(
-          tr(width := "100%")(
-            th(width := "50%")(
-              h4("HTML")
-            ),
-            th(width := "50%")(
-              h4("Scalatags")
+        tr(width := "100%")(
+          td(width := "50%")(
+            textarea(id := "htmlCode", cls := "boxsizingBorder", width := "100%", rows := 26, placeholder := "Enter your HTML code here.")(
+              """<div class="myClass">
+                |    <div class="someClass" data-attribute="someValue">
+                |        <button type="button" class="btn btn-default">Button</button>
+                |    </div>
+                |    <br/>
+                |    <span>
+                |       <img class="my-img-class" src="assets/images/image1.jpg" onclick='alert("clicked!");' alt=""/>
+                |    </span>
+                |    <a href="javascript:void(0);" class="my-class" data-toggle="dropdown">
+                |       Some link
+                |    </a>
+                |    <ul class="dropdown-menu">
+                |       <li>
+                |           List item 1
+                |       </li>
+                |       <li>
+                |           List&nbsp;item&nbsp;2
+                |       </li>
+                |    </ul>
+                |    <script>
+                |       document.getElementById("someId").value = "Hello Scala.js!";
+                |    </script>
+                |</div>""".stripMargin
             )
           ),
-          tr(width := "100%")(
-            td(width := "50%")(
-              textarea(id := "htmlCode", cls := "boxsizingBorder", width := "100%", rows := 26, placeholder := "Enter your HTML code here.")(
-                """<div class="myClass">
-                  |    <div class="someClass" data-attribute="someValue">
-                  |        <button type="button" class="btn btn-default">Button</button>
-                  |    </div>
-                  |    <br/>
-                  |    <span>
-                  |       <img class="my-img-class" src="assets/images/image1.jpg" onclick='alert("clicked!");' alt=""/>
-                  |    </span>
-                  |    <a href="javascript:void(0);" class="my-class" data-toggle="dropdown">
-                  |       Some link
-                  |    </a>
-                  |    <ul class="dropdown-menu">
-                  |       <li>
-                  |           List item 1
-                  |       </li>
-                  |       <li>
-                  |           List&nbsp;item&nbsp;2
-                  |       </li>
-                  |    </ul>
-                  |    <script>
-                  |       document.getElementById("someId").value = "Hello Scala.js!";
-                  |    </script>
-                  |</div>""".stripMargin
-              )
-            ),
-            td(width := "50%")(
-              textarea(id := "scalaTagsCode", cls := "boxsizingBorder", width := "100%", rows := 26, placeholder := "Scala code will be generated here.")
-            )
-          ),
-          tr(width := "100%")(
-            td(colspan := "2", textAlign := "center")(
-              button(cls := "myButton", onclick := { () => runConverter(ReactScalaTagsConverter) })("Convert to Scalajs-React's Scalatags"),
-              span("  "),
-              button(cls := "myButton", onclick := { () => runConverter(ScalaTagsConverter) })("Convert to Scalatags")
-            )
+          td(width := "50%")(
+            textarea(id := "scalaTagsCode", cls := "boxsizingBorder", width := "100%", rows := 26, placeholder := "Scala code will be generated here.")
+          )
+        ),
+        tr(width := "100%")(
+          td(colspan := "2", textAlign := "center")(
+            button(cls := "myButton", onclick := { () => runConverter(ReactScalaTagsConverter) })("Convert to Scalajs-React's Scalatags"),
+            span("  "),
+            button(cls := "myButton", onclick := { () => runConverter(ScalaTagsConverter) })("Convert to Scalatags")
           )
         )
       )
+    )
+
+  @JSExport
+  def main(mainDiv: html.Div): Unit =
     mainDiv.appendChild(content.render)
-  }
 
 
   implicit def asAttrMap(nodeMap: NamedNodeMap): IndexedSeq[(String, String)] = {
@@ -88,7 +87,6 @@ object HtmlToScalaTagsConverter {
       for (i <- 0 until childNodes.length) yield childNodes.item(i)
   }
 
-
   def runConverter(converterType: ConverterType) = {
     val htmlCode = dom.document.getElementById("htmlCode").asInstanceOf[TextArea].value
     val parsedHtml = new DOMParser().parseFromString(htmlCode, "text/html")
@@ -98,9 +96,6 @@ object HtmlToScalaTagsConverter {
     val outputScalaTagsCodeRemovedParserAddedTags = removeParserAddedTags(htmlCode, outputScalaTagsCode)
     scalaCodeTextArea.value = outputScalaTagsCodeRemovedParserAddedTags.trim
   }
-
-
-
 
   def toScalaTags(node: Node, converterType: ConverterType): String = {
 
@@ -137,6 +132,8 @@ object HtmlToScalaTagsConverter {
       ""
     else if (node.nodeName == "#text")
       tripleQuoteString(node.nodeValue)
+    else if(attributes.isEmpty && children.isEmpty)
+      s"${nodePrefix + node.nodeName.toLowerCase}"
     else {
       s"${nodePrefix + node.nodeName.toLowerCase}($attributes${
         if (children.isEmpty)
@@ -144,7 +141,7 @@ object HtmlToScalaTagsConverter {
         else if (attributes.isEmpty)
           "\n" + children + "\n"
         else
-          ")(\n" + children + "\n"
+          ",\n" + children + "\n"
       })"
     }
   }
