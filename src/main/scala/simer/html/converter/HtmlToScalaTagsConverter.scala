@@ -21,6 +21,11 @@ object HtmlToScalaTagsConverter {
       ul(
         li(
           a(href := "#")("HTML TO SCALATAGS CONVERTER")
+        ),
+        li(float := "right",
+          u(
+            a(href := "https://github.com/simerplaha/html-to-scalatags-converter/issues", target := "blank")("Report an issue")
+          )
         )
       ),
       table(width := "100%")(
