@@ -86,10 +86,8 @@ object HtmlToScalaTagsConverter {
     )
 
 
-  implicit def asAttrMap(nodeMap: NamedNodeMap): IndexedSeq[(String, String)] = {
-    for (i <- 0 until nodeMap.length)
-      yield (nodeMap.item(i).name, nodeMap.item(i).value)
-  }
+  implicit def asAttrMap(nodeMap: NamedNodeMap): IndexedSeq[(String, String)] =
+    for (i <- 0 until nodeMap.length) yield (nodeMap.item(i).name, nodeMap.item(i).value)
 
   implicit def childNodes(childNodes: NodeList): IndexedSeq[Node] =
     if (js.isUndefined(childNodes))
@@ -109,38 +107,9 @@ object HtmlToScalaTagsConverter {
   }
 
   /**
-    * TODO: Yuk! Simplify this code.
+    * Recursively generates the output Scalatag's code.
     */
   def toScalaTags(node: Node, converterType: ConverterType, inlineAttributes: Boolean): String = {
-    val attributePrefix = converterType.attributePrefix
-    val classAttributeKey = converterType.classAttributeKey
-    val customAttributePostfix = converterType.customAttributePostfix
-    val nodePrefix = converterType.nodePrefix
-
-    val attributes = {
-      if (js.isUndefined(node) || js.isUndefined(node.attributes) || node.attributes.length == 0) {
-        ""
-      } else {
-        val attributesMap =
-          node.attributes.map {
-            case (key, value) =>
-              val escapedValue = tripleQuoteString(value)
-              if (key == "class")
-                s"${attributePrefix + classAttributeKey + " := " + escapedValue}"
-              else if (key == "for" || key == "type")
-                s"$attributePrefix`$key` := $escapedValue"
-              else if (!key.matches("[a-zA-Z0-9]*$"))
-                s""""$key".$customAttributePostfix := $escapedValue"""
-              else
-                s"$attributePrefix$key := $escapedValue"
-          }
-        if (!inlineAttributes)
-          attributesMap.mkString("\n", ",\n", "")
-        else
-          attributesMap.mkString(", ")
-      }
-    }
-
     //gets rid of all comments and text node which are empty
     val childrenWithoutGarbageNodes = node.childNodes
       .filterNot(node => node.nodeName == "#comment" || (node.nodeName == "#text" && node.nodeValue.trim.isEmpty))
@@ -148,6 +117,9 @@ object HtmlToScalaTagsConverter {
     val children = childrenWithoutGarbageNodes
       .map(toScalaTags(_, converterType, inlineAttributes))
       .mkString(",\n")
+
+    val attributes = buildAttributeString(node, inlineAttributes, converterType.attributePrefix, converterType.classAttributeKey, converterType.customAttributePostfix)
+    val nodePrefix = converterType.nodePrefix
 
     //text child nodes can be a part of the same List as the attribute List. They don't have to go to a new line.
     val isChildNodeATextNode = childrenWithoutGarbageNodes.nonEmpty && childrenWithoutGarbageNodes.head.nodeName == "#text"
@@ -170,6 +142,29 @@ object HtmlToScalaTagsConverter {
       })"
     }
   }
+
+  def buildAttributeString(node: Node, inlineAttributes: Boolean, attributePrefix: String, classAttributeKey: String, customAttributePostfix: String): String =
+    if (js.isUndefined(node) || js.isUndefined(node.attributes) || node.attributes.length == 0) {
+      ""
+    } else {
+      val attributesMap =
+        node.attributes.map {
+          case (key, value) =>
+            val escapedValue = tripleQuoteString(value)
+            if (key == "class")
+              s"${attributePrefix + classAttributeKey + " := " + escapedValue}"
+            else if (key == "for" || key == "type")
+              s"$attributePrefix`$key` := $escapedValue"
+            else if (!key.matches("[a-zA-Z0-9]*$"))
+              s""""$key".$customAttributePostfix := $escapedValue"""
+            else
+              s"$attributePrefix$key := $escapedValue"
+        }
+      if (!inlineAttributes)
+        attributesMap.mkString("\n", ",\n", "")
+      else
+        attributesMap.mkString(", ")
+    }
 
   /**
     * The javascript html parser seems to add html, head and body tags the parsed tree by default.
