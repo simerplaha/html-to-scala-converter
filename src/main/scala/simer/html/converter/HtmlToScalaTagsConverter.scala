@@ -153,6 +153,15 @@ object HtmlToScalaTagsConverter {
             val escapedValue = tripleQuoteString(value)
             if (key == "class")
               s"${attributePrefix + classAttributeKey + " := " + escapedValue}"
+            else if (key == "style") {
+              val attributeKeyAndValue = value.split(";")
+              val dictionaryStrings = attributeKeyAndValue.map {
+                string =>
+                  val styleKeyValue = string.split(":")
+                  s""""${styleKeyValue.head.trim}" -> "${styleKeyValue.last.trim}""""
+              }.mkString(", ")
+             s"""${attributePrefix + key} := js.Dictionary($dictionaryStrings)"""
+            }
             else if (key == "for" || key == "type")
               s"$attributePrefix`$key` := $escapedValue"
             else if (!key.matches("[a-zA-Z0-9]*$"))
