@@ -51,7 +51,7 @@ object HtmlToScalaTagsConverter {
                 |    <a href="javascript:void(0);" class="my-class" data-toggle="dropdown">
                 |       Some link
                 |    </a>
-                |    <ul class="dropdown-menu">
+                |    <ul class="dropdown-menu" style="list-style: none; padding: 0;">
                 |       <li>
                 |           List item 1
                 |       </li>
