@@ -162,10 +162,7 @@ object HtmlToScalaTagsConverter extends JSApp {
             else if (key == "for" || key == "type")
               s"$attributePrefix`$key` := $escapedValue"
             else if (!key.matches("[a-zA-Z0-9]*$"))
-              if (customAttributePostfix == "attr")
-                s""""$key".$customAttributePostfix := $escapedValue"""
-              else
-                s"""$customAttributePostfix("$key") := $escapedValue"""
+              s"""$customAttributePostfix("$key") := $escapedValue"""
             else
               s"$attributePrefix$key := $escapedValue"
         }
