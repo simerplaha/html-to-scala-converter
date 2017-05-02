@@ -74,9 +74,9 @@ object HtmlToScalaTagsConverter extends JSApp {
         ),
         tr(width := "100%")(
           td(colspan := "2", textAlign := "center")(
-            button(cls := "myButton", onclick := { () => runConverter(ReactScalaTagsConverter) })("Convert to Scalajs-React's Scalatags"),
+            button(cls := "myButton", onclick := { () => runConverter(ReactScalaTagsConverter) })("Convert to Scalajs-React's VDOM (1.0.0)"),
             span("  "),
-            button(cls := "myButton", onclick := { () => runConverter(ScalaTagsConverter) })("Convert to Scalatags")
+            button(cls := "myButton", onclick := { () => runConverter(ScalaTagsConverter) })("Convert to Scalatags (0.6.5)")
           )
         )
       )
