@@ -11,7 +11,7 @@ sealed trait ConverterType {
 case object ReactScalaTagsConverter extends ConverterType {
   val attributePrefix: String = "^."
   val nodePrefix: String = "<."
-  val customAttributePostfix: String = "reactAttr"
+  val customAttributePostfix: String = "VdomAttr"
   val classAttributeKey: String = "className"
 }
 

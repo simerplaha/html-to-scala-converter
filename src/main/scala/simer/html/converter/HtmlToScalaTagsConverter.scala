@@ -3,18 +3,15 @@ package simer.html.converter
 import org.scalajs.dom
 import org.scalajs.dom.html.{Input, TextArea}
 import org.scalajs.dom.raw.{DOMParser, Node}
-import org.scalajs.dom.{NamedNodeMap, NodeList, html}
-
+import org.scalajs.dom.{NamedNodeMap, NodeList}
+import scala.scalajs.js.JSApp
 import scala.scalajs.js
-import scala.scalajs.js.annotation.JSExport
 import scalatags.JsDom.all._
 
-@JSExport
-object HtmlToScalaTagsConverter {
+object HtmlToScalaTagsConverter extends JSApp {
 
-  @JSExport
-  def main(mainDiv: html.Div): Unit =
-    mainDiv.appendChild(content.render)
+  def main(): Unit =
+    dom.document.getElementById("content").appendChild(content.render)
 
   val content =
     div(
@@ -165,7 +162,7 @@ object HtmlToScalaTagsConverter {
             else if (key == "for" || key == "type")
               s"$attributePrefix`$key` := $escapedValue"
             else if (!key.matches("[a-zA-Z0-9]*$"))
-              s""""$key".$customAttributePostfix := $escapedValue"""
+              s"""$customAttributePostfix("$key") := $escapedValue"""
             else
               s"$attributePrefix$key := $escapedValue"
         }
