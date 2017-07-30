@@ -1,96 +1,19 @@
 package simer.html.converter
 
 import org.scalajs.dom
+import org.scalajs.dom.ext._
 import org.scalajs.dom.html.{Input, TextArea}
 import org.scalajs.dom.raw.{DOMParser, Node}
-import org.scalajs.dom.{NamedNodeMap, NodeList}
-import scala.scalajs.js.JSApp
+
 import scala.scalajs.js
-import scalatags.JsDom.all._
+import scala.scalajs.js.JSApp
 
 object HtmlToScalaTagsConverter extends JSApp {
 
-  def main(): Unit =
-    dom.document.getElementById("content").appendChild(content.render)
-
-  val content =
-    div(
-      ul(
-        li(
-          a(href := "#")("HTML TO SCALATAGS CONVERTER")
-        ),
-        li(float := "right",
-          u(
-            a(href := "https://github.com/simerplaha/html-to-scalatags-converter/issues", target := "blank")("Report an issue")
-          )
-        )
-      ),
-      table(width := "100%")(
-        tr(width := "100%")(
-          th(width := "50%")(
-            h4("HTML")
-          ),
-          th(width := "50%")(
-            h4("Scalatags")
-          )
-        ),
-        tr(width := "100%")(
-          td(width := "50%")(
-            textarea(id := "htmlCode", cls := "boxsizingBorder", width := "100%", rows := 26, placeholder := "Enter your HTML code here.")(
-              """<div class="myClass">
-                |    <div class="someClass" data-attribute="someValue">
-                |        <button type="button" class="btn btn-default">Button</button>
-                |    </div>
-                |    <br/>
-                |    <span>
-                |       <img class="my-img-class" src="assets/images/image1.jpg" onclick='alert("clicked!");' alt=""/>
-                |    </span>
-                |    <a href="javascript:void(0);" class="my-class" data-toggle="dropdown">
-                |       Some link
-                |    </a>
-                |    <ul class="dropdown-menu" style="list-style: none; padding: 0;">
-                |       <li>
-                |           List item 1
-                |       </li>
-                |       <li>
-                |           List&nbsp;item&nbsp;2
-                |       </li>
-                |    </ul>
-                |    <script>
-                |       document.getElementById("someId").value = "Hello Scala.js!";
-                |    </script>
-                |</div>""".stripMargin
-            )
-          ),
-          td(width := "50%")(
-            textarea(id := "scalaTagsCode", cls := "boxsizingBorder", width := "100%", rows := 26, placeholder := "Scala code will be generated here.")
-          )
-        ),
-        tr(width := "100%")(
-          td(colspan := "2", textAlign := "center")(
-            span("Add attributes on new line: "),
-            input(id := "newlineAttributes", cls := "myButton", `type` := "checkbox")
-          )
-        ),
-        tr(width := "100%")(
-          td(colspan := "2", textAlign := "center")(
-            button(cls := "myButton", onclick := { () => runConverter(ReactScalaTagsConverter) })("Convert to Scalajs-React's VDOM (1.0.0)"),
-            span("  "),
-            button(cls := "myButton", onclick := { () => runConverter(ScalaTagsConverter) })("Convert to Scalatags (0.6.5)")
-          )
-        )
-      )
-    )
-
-
-  implicit def asAttrMap(nodeMap: NamedNodeMap): IndexedSeq[(String, String)] =
-    for (i <- 0 until nodeMap.length) yield (nodeMap.item(i).name, nodeMap.item(i).value)
-
-  implicit def childNodes(childNodes: NodeList): IndexedSeq[Node] =
-    if (js.isUndefined(childNodes))
-      IndexedSeq.empty[Node]
-    else
-      for (i <- 0 until childNodes.length) yield childNodes.item(i)
+  def main(): Unit = {
+    val template = HTMLTemplate.template(runConverter)
+    dom.document.getElementById("content").appendChild(template.render)
+  }
 
   def runConverter(converterType: ConverterType) = {
     val htmlCode = dom.document.getElementById("htmlCode").asInstanceOf[TextArea].value
@@ -141,23 +64,25 @@ object HtmlToScalaTagsConverter extends JSApp {
   }
 
   def buildAttributeString(node: Node, inlineAttributes: Boolean, attributePrefix: String, classAttributeKey: String, customAttributePostfix: String): String =
-    if (js.isUndefined(node) || js.isUndefined(node.attributes) || node.attributes.length == 0) {
+    if (js.isUndefined(node) || js.isUndefined(node.attributes) || node.attributes.length == 0)
       ""
-    } else {
+    else {
       val attributesMap =
         node.attributes.map {
-          case (key, value) =>
-            val escapedValue = tripleQuoteString(value)
+          case (key, attrValue) =>
+            val valueString = attrValue.value
+            val escapedValue = tripleQuoteString(valueString)
             if (key == "class")
               s"${attributePrefix + classAttributeKey + " := " + escapedValue}"
             else if (key == "style") {
-              val attributeKeyAndValue = value.split(";")
+              val attributeKeyAndValue = valueString.split(";")
               val dictionaryStrings = attributeKeyAndValue.map {
                 string =>
                   val styleKeyValue = string.split(":")
                   s""""${styleKeyValue.head.trim}" -> "${styleKeyValue.last.trim}""""
               }.mkString(", ")
-             s"""${attributePrefix + key} := js.Dictionary($dictionaryStrings)"""
+
+              s"""${attributePrefix + key} := js.Dictionary($dictionaryStrings)"""
             }
             else if (key == "for" || key == "type")
               s"$attributePrefix`$key` := $escapedValue"
