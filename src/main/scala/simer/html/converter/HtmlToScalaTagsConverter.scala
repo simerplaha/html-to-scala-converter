@@ -3,7 +3,7 @@ package simer.html.converter
 import org.scalajs.dom
 import org.scalajs.dom.ext._
 import org.scalajs.dom.html.{Input, TextArea}
-import org.scalajs.dom.raw.{DOMParser, Node}
+import org.scalajs.dom.raw.{DOMParser, NamedNodeMap, Node}
 
 import scala.scalajs.js
 import scala.scalajs.js.JSApp
@@ -22,7 +22,7 @@ object HtmlToScalaTagsConverter extends JSApp {
     val newlineAttributes = dom.document.getElementById("newlineAttributes").asInstanceOf[Input]
     val htmlTagNode = parsedHtml.childNodes.item(0)
     val outputScalaTagsCode = toScalaTags(htmlTagNode, converterType, !newlineAttributes.checked)
-    val outputScalaTagsCodeRemovedParserAddedTags = removeParserAddedTags(htmlCode, outputScalaTagsCode)
+    val outputScalaTagsCodeRemovedParserAddedTags = removeTagsFromScalaCode(htmlCode, outputScalaTagsCode, "html", "head", "body")
     scalaCodeTextArea.value = outputScalaTagsCodeRemovedParserAddedTags.trim
   }
 
@@ -38,99 +38,101 @@ object HtmlToScalaTagsConverter extends JSApp {
       .map(toScalaTags(_, converterType, inlineAttributes))
       .mkString(",\n")
 
-    val attributes = buildAttributeString(node, inlineAttributes, converterType.attributePrefix, converterType.classAttributeKey, converterType.customAttributePostfix)
-    val nodePrefix = converterType.nodePrefix
+    //convert html node attributes/properties to scala attributes/properties
+    val scalaAttrString =
+      if (js.isUndefined(node) || js.isUndefined(node.attributes) || node.attributes.length == 0) //node has no attributes
+        ""
+      else {
+        val scalaAttrList = toScalaAttributes(node.attributes, inlineAttributes, converterType.attributePrefix, converterType.classAttributeKey, converterType.customAttributePostfix)
+        if (!inlineAttributes) scalaAttrList.mkString("\n", ",\n", "") else scalaAttrList.mkString(", ")
+      }
 
     //text child nodes can be a part of the same List as the attribute List. They don't have to go to a new line.
     val isChildNodeATextNode = childrenWithoutGarbageNodes.nonEmpty && childrenWithoutGarbageNodes.head.nodeName == "#text"
 
-    if (node.nodeName == "#text")
-      tripleQuoteString(node.nodeValue)
-    else if (attributes.isEmpty && children.isEmpty)
-      s"${nodePrefix + node.nodeName.toLowerCase}"
-    else {
-      s"${nodePrefix + node.nodeName.toLowerCase}($attributes${
-        if (children.isEmpty)
-          ""
-        else {
-          val commaMayBe = if (attributes.isEmpty) "" else ","
-          val startNewLineMayBe = if (isChildNodeATextNode && (inlineAttributes || attributes.isEmpty)) "" else "\n"
-          //add a newLine at the end if this node has more then one child nodes
-          val endNewLineMayBe = if (isChildNodeATextNode && childrenWithoutGarbageNodes.size <= 1) "" else "\n"
-          s"$commaMayBe$startNewLineMayBe$children$endNewLineMayBe"
-        }
-      })"
+    node.nodeName match {
+      case "#text" =>
+        tripleQuote(node.nodeValue)
+
+      case _ if scalaAttrString.isEmpty && children.isEmpty =>
+        s"${converterType.nodePrefix + node.nodeName.toLowerCase}"
+
+      case _ =>
+        s"${converterType.nodePrefix + node.nodeName.toLowerCase}($scalaAttrString${
+          if (children.isEmpty)
+            ""
+          else {
+            val commaMayBe = if (scalaAttrString.isEmpty) "" else ","
+            val startNewLineMayBe = if (isChildNodeATextNode && (inlineAttributes || scalaAttrString.isEmpty)) "" else "\n"
+            //add a newLine at the end if this node has more then one child nodes
+            val endNewLineMayBe = if (isChildNodeATextNode && childrenWithoutGarbageNodes.size <= 1) "" else "\n"
+            s"$commaMayBe$startNewLineMayBe$children$endNewLineMayBe"
+          }
+        })"
+
     }
   }
 
-  def buildAttributeString(node: Node, inlineAttributes: Boolean, attributePrefix: String, classAttributeKey: String, customAttributePostfix: String): String =
-    if (js.isUndefined(node) || js.isUndefined(node.attributes) || node.attributes.length == 0)
-      ""
-    else {
-      val attributesMap =
-        node.attributes.map {
-          case (key, attrValue) =>
-            val valueString = attrValue.value
-            val escapedValue = tripleQuoteString(valueString)
-            if (key == "class")
-              s"${attributePrefix + classAttributeKey + " := " + escapedValue}"
-            else if (key == "style") {
-              val attributeKeyAndValue = valueString.split(";")
-              val dictionaryStrings = attributeKeyAndValue.map {
-                string =>
-                  val styleKeyValue = string.split(":")
-                  s""""${styleKeyValue.head.trim}" -> "${styleKeyValue.last.trim}""""
-              }.mkString(", ")
+  /**
+    * Converts HTML node attributes to Scalatag attributes
+    */
+  def toScalaAttributes(nodeAttributes: NamedNodeMap, inlineAttributes: Boolean, attributePrefix: String, classAttributeKey: String, customAttributePostfix: String): Iterable[String] =
+    nodeAttributes.map {
+      case (attrKey, attrValue) =>
+        val attrValueString = attrValue.value
+        val escapedValue = tripleQuote(attrValueString)
+        attrKey match {
+          case "class" =>
+            s"${attributePrefix + classAttributeKey + " := " + escapedValue}"
 
-              s"""${attributePrefix + key} := js.Dictionary($dictionaryStrings)"""
-            }
-            else if (key == "for" || key == "type")
-              s"$attributePrefix`$key` := $escapedValue"
-            else if (!key.matches("[a-zA-Z0-9]*$"))
-              s"""$customAttributePostfix("$key") := $escapedValue"""
-            else
-              s"$attributePrefix$key := $escapedValue"
+          case "style" =>
+            val attributeKeyAndValue = attrValueString.split(";")
+            val dictionaryStrings = attributeKeyAndValue.map {
+              string =>
+                val styleKeyValue = string.split(":")
+                s""""${styleKeyValue.head.trim}" -> "${styleKeyValue.last.trim}""""
+            }.mkString(", ")
+
+            s"""${attributePrefix + attrKey} := js.Dictionary($dictionaryStrings)"""
+
+          case "for" | "type" =>
+            s"$attributePrefix`$attrKey` := $escapedValue"
+
+          case _ if !attrKey.matches("[a-zA-Z0-9]*$") =>
+            s"""$customAttributePostfix("$attrKey") := $escapedValue"""
+
+          case _ =>
+            s"$attributePrefix$attrKey := $escapedValue"
         }
-      if (!inlineAttributes)
-        attributesMap.mkString("\n", ",\n", "")
-      else
-        attributesMap.mkString(", ")
     }
 
   /**
-    * The javascript html parser seems to add html, head and body tags the parsed tree by default.
-    * This code will remove the ones that are not in the input HTML.
+    * Javascript html parser seems to add <html>, <head> and <body> tags the parsed tree by default.
+    * This remove the ones that are not in the input HTML.
     *
-    * TODO: Do this in the javascript parsed tree before generating scala code instead of operating on the
-    * scala generated code.
-    * (Will leave this as is for now because it's easier this way then working with Javascript's untyped API)
+    * Might not work for tags other then html, head and body. Have not looked into others, didn't need them so far.
     */
-  def removeParserAddedTags(htmlCode: String, scalaCode: String): String = {
-    val removeHtmlTag = "(?i)<html".r.findFirstMatchIn(htmlCode).isEmpty
-    val removeHeadTag = "(?i)<head".r.findFirstMatchIn(htmlCode).isEmpty
-    val removeBodyTag = "(?i)<body".r.findFirstMatchIn(htmlCode).isEmpty
+  def removeTagsFromScalaCode(htmlCode: String, scalaCode: String, tagsToRemove: String*): String =
+    tagsToRemove.foldLeft(scalaCode) {
+      case (newScalaCode, tagToRemove) =>
+        s"(?i)<$tagToRemove".r.findFirstMatchIn(htmlCode) match {
+          case None =>
+            val scalaCodeWithoutTag = newScalaCode.replaceFirst(s".*$tagToRemove.+", "").trim
+            if (tagToRemove == "head") //If head if head is empty in html. Result Scalatag would be head() in Scala.
+              scalaCodeWithoutTag
+            else
+              scalaCodeWithoutTag.dropRight(1) //remove the closing ')' for the tag if it's not head.
 
-    Map("html" -> removeHtmlTag, "head" -> removeHeadTag, "body" -> removeBodyTag).foldLeft(scalaCode) {
-      case (outputString, (tagName, toRemove)) =>
-        toRemove match {
-          case true =>
-            val removedTagString = outputString.replaceFirst(s".*$tagName.+", "").trim
-            if (tagName != "head") {
-              removedTagString.dropRight(1)
-            } else
-              removedTagString
-          case _ =>
-            outputString
+          case Some(_) =>
+            newScalaCode
         }
     }
-  }
 
-  def tripleQuoteString(string: String): String = {
+  def tripleQuote(string: String): String =
     string.trim match {
       case string if string.contains("\"") || string.contains("\n") || string.contains("\\") =>
         s"""\"\"\"$string\"\"\""""
       case string =>
         s""""$string""""
     }
-  }
 }

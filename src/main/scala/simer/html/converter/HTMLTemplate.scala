@@ -4,7 +4,7 @@ import scalatags.JsDom.all._
 
 object HTMLTemplate {
 
-  def template(converter: ConverterType => Unit) =
+  def template(onConvertClicked: ConverterType => Unit) =
     div(
       ul(
         li(
@@ -58,16 +58,21 @@ object HTMLTemplate {
           )
         ),
         tr(width := "100%")(
-          td(colspan := "2", textAlign := "center")(
-            span("Add attributes on new line: "),
-            input(id := "newlineAttributes", cls := "myButton", `type` := "checkbox")
+          td(colspan := "2", textAlign := "center", paddingBottom := "10px")(
+            input(`type` := "checkbox", id := "newlineAttributes"),
+            label(`for` := "newlineAttributes", "Add properties on newline"),
           )
         ),
         tr(width := "100%")(
           td(colspan := "2", textAlign := "center")(
-            button(cls := "myButton", onclick := { () => converter(ReactScalaTagsConverter) })("Convert to Scalajs-React's VDOM (1.0.0)"),
+            button(cls := "button -salmon center", onclick := { () => onConvertClicked(ReactScalaTagsConverter) })("Convert to Scalajs-React's VDOM (1.0.0)"),
             span("  "),
-            button(cls := "myButton", onclick := { () => converter(ScalaTagsConverter) })("Convert to Scalatags (0.6.5)")
+            button(cls := "button -salmon center", onclick := { () => onConvertClicked(ScalaTagsConverter) })("Convert to Scalatags (0.6.5)")
+          )
+        ),
+        tr(width := "100%")(
+          td(colspan := "2", textAlign := "center", paddingTop := "5px")(
+            a(cls := "github-button", href := "https://github.com/simerplaha/html-to-scalatags-converter", attr("data-icon") := "octicon-star", attr("data-size") := "large", attr("data-show-count") := "true", attr("aria-label") := "Star simerplaha/html-to-scalatags-converter on GitHub", "Star"),
           )
         )
       )
