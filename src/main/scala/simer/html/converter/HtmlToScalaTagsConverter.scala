@@ -15,15 +15,15 @@ object HtmlToScalaTagsConverter extends JSApp {
     dom.document.getElementById("content").appendChild(template.render)
   }
 
-  def runConverter(converterType: ConverterType) = {
+  def runConverter(converterType: ConverterType): Unit = {
     val htmlCode = dom.document.getElementById("htmlCode").asInstanceOf[TextArea].value
     val parsedHtml = new DOMParser().parseFromString(htmlCode, "text/html")
     val scalaCodeTextArea = dom.document.getElementById("scalaTagsCode").asInstanceOf[TextArea]
-    val newlineAttributes = dom.document.getElementById("newlineAttributes").asInstanceOf[Input]
+    val addPropertiesToNewLineCheckbox = dom.document.getElementById("newlineAttributes").asInstanceOf[Input]
     val htmlTagNode = parsedHtml.childNodes.item(0)
-    val outputScalaTagsCode = toScalaTags(htmlTagNode, converterType, !newlineAttributes.checked)
-    val outputScalaTagsCodeRemovedParserAddedTags = removeTagsFromScalaCode(htmlCode, outputScalaTagsCode, "html", "head", "body")
-    scalaCodeTextArea.value = outputScalaTagsCodeRemovedParserAddedTags.trim
+    val scalaCode = toScalaTags(htmlTagNode, converterType, !addPropertiesToNewLineCheckbox.checked)
+    val scalaCodeWithoutParserAddedTags = removeTagsFromScalaCode(htmlCode, scalaCode, "html", "head", "body")
+    scalaCodeTextArea.value = scalaCodeWithoutParserAddedTags.trim
   }
 
   /**
@@ -43,7 +43,14 @@ object HtmlToScalaTagsConverter extends JSApp {
       if (js.isUndefined(node) || js.isUndefined(node.attributes) || node.attributes.length == 0) //node has no attributes
         ""
       else {
-        val scalaAttrList = toScalaAttributes(node.attributes, inlineAttributes, converterType.attributePrefix, converterType.classAttributeKey, converterType.customAttributePostfix)
+        val scalaAttrList =
+          toScalaAttributes(
+            nodeAttributes = node.attributes,
+            inlineAttributes = inlineAttributes,
+            attributePrefix = converterType.attributePrefix,
+            classAttributeKey = converterType.classAttributeKey,
+            customAttributePostfix = converterType.customAttributePostfix
+          )
         if (!inlineAttributes) scalaAttrList.mkString("\n", ",\n", "") else scalaAttrList.mkString(", ")
       }
 
@@ -74,9 +81,13 @@ object HtmlToScalaTagsConverter extends JSApp {
   }
 
   /**
-    * Converts HTML node attributes to Scalatag attributes
+    * Converts HTML node attributes to Scalatags attributes
     */
-  def toScalaAttributes(nodeAttributes: NamedNodeMap, inlineAttributes: Boolean, attributePrefix: String, classAttributeKey: String, customAttributePostfix: String): Iterable[String] =
+  def toScalaAttributes(nodeAttributes: NamedNodeMap,
+                        inlineAttributes: Boolean,
+                        attributePrefix: String,
+                        classAttributeKey: String,
+                        customAttributePostfix: String): Iterable[String] =
     nodeAttributes.map {
       case (attrKey, attrValue) =>
         val attrValueString = attrValue.value
