@@ -20,19 +20,28 @@ object HtmlToScalaTagsConverter extends JSApp {
     val parsedHtml = new DOMParser().parseFromString(htmlCode, "text/html")
     val scalaCodeTextArea = dom.document.getElementById("scalaTagsCode").asInstanceOf[TextArea]
     val addPropertiesToNewLineCheckbox = dom.document.getElementById("newlineAttributes").asInstanceOf[Input]
-    val htmlTagNode = parsedHtml.childNodes.item(0)
-    val scalaCode = toScalaTags(htmlTagNode, converterType, !addPropertiesToNewLineCheckbox.checked)
+    val scalaCodes = parsedHtml.childNodes.map(toScalaTags(_, converterType, !addPropertiesToNewLineCheckbox.checked))
+    val scalaCode =
+      if (scalaCodes.size > 1) {
+        val fixMe = s"""//FIXME - MULTIPLE HTML TREES PASSED TO THE CONVERTER. THIS MIGHT GENERATE UNEXPECTED SCALATAGS CODE."""
+        fixMe + "\n" + scalaCodes.mkString(", ")
+      } else
+        scalaCodes.mkString(", ")
+
     val scalaCodeWithoutParserAddedTags = removeTagsFromScalaCode(htmlCode, scalaCode, "html", "head", "body")
     scalaCodeTextArea.value = scalaCodeWithoutParserAddedTags.trim
   }
+
+  def removeGarbageChildNodes(node: Node): Seq[Node] =
+    node.childNodes
+      .filterNot(node => node.nodeName == "#comment" || node.nodeName == "#document" || (node.nodeName == "#text" && node.nodeValue.trim.isEmpty))
 
   /**
     * Recursively generates the output Scalatag's code.
     */
   def toScalaTags(node: Node, converterType: ConverterType, inlineAttributes: Boolean): String = {
     //gets rid of all comments and text node which are empty
-    val childrenWithoutGarbageNodes = node.childNodes
-      .filterNot(node => node.nodeName == "#comment" || (node.nodeName == "#text" && node.nodeValue.trim.isEmpty))
+    val childrenWithoutGarbageNodes: Seq[Node] = removeGarbageChildNodes(node)
 
     val children = childrenWithoutGarbageNodes
       .map(toScalaTags(_, converterType, inlineAttributes))
