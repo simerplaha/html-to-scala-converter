@@ -1,8 +1,13 @@
 package simer.html.converter
 
+import org.scalajs.dom
+import org.scalajs.dom.html.Input
+
 import scalatags.JsDom.all._
 
 object HTMLTemplate {
+
+  def isNewLineAttributes = !dom.document.getElementById("newlineAttributes").asInstanceOf[Input].checked
 
   def template(onConvertClicked: ConverterType => Unit) =
     div(
@@ -65,9 +70,9 @@ object HTMLTemplate {
         ),
         tr(width := "100%")(
           td(colspan := "2", textAlign := "center")(
-            button(cls := "button -salmon center", onclick := { () => onConvertClicked(ReactScalaTagsConverter) })("Convert to Scalajs-React's VDOM (1.0.0)"),
+            button(cls := "button -salmon center", onclick := { () => onConvertClicked(ReactScalaTagsConverter(isNewLineAttributes)) })("Convert to Scalajs-React's VDOM (1.0.0)"),
             span("  "),
-            button(cls := "button -salmon center", onclick := { () => onConvertClicked(ScalaTagsConverter) })("Convert to Scalatags (0.6.5)")
+            button(cls := "button -salmon center", onclick := { () => onConvertClicked(ScalaTagsConverter(isNewLineAttributes)) })("Convert to Scalatags (0.6.5)")
           )
         ),
         tr(width := "100%")(

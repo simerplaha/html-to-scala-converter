@@ -2,7 +2,7 @@ package simer.html.converter
 
 import org.scalajs.dom
 import org.scalajs.dom.ext._
-import org.scalajs.dom.html.{Input, TextArea}
+import org.scalajs.dom.html.TextArea
 import org.scalajs.dom.raw.{DOMParser, NamedNodeMap, Node}
 
 import scala.scalajs.js
@@ -19,12 +19,12 @@ object HtmlToScalaTagsConverter extends JSApp {
     val htmlCode = dom.document.getElementById("htmlCode").asInstanceOf[TextArea].value
     val parsedHtml = new DOMParser().parseFromString(htmlCode, "text/html")
     val scalaCodeTextArea = dom.document.getElementById("scalaTagsCode").asInstanceOf[TextArea]
-    val addPropertiesToNewLineCheckbox = dom.document.getElementById("newlineAttributes").asInstanceOf[Input]
     val rootChildNodes = removeGarbageChildNodes(parsedHtml)
-    val scalaCodes = rootChildNodes.map(toScalaTags(_, converterType, !addPropertiesToNewLineCheckbox.checked))
+    //having more then one HTML tree causes the DOMParser to generate an incorrect tree.
+    val scalaCodes = rootChildNodes.map(toScalaTags(_, converterType))
     val scalaCode =
       if (scalaCodes.size > 1) {
-        val fixMe = s"""//FIXME - MULTIPLE HTML TREES PASSED TO THE CONVERTER. THIS MIGHT GENERATE UNEXPECTED SCALATAGS CODE."""
+        val fixMe = s"""//FIXME - MULTIPLE HTML TREES PASSED TO THE CONVERTER. THIS MIGHT GENERATE UNEXPECTED SCALATAGS CODE. Check <!DOCTYPE html> is not in the input HTML."""
         fixMe + "\n" + scalaCodes.mkString(", ")
       } else
         scalaCodes.mkString(", ")
@@ -34,53 +34,61 @@ object HtmlToScalaTagsConverter extends JSApp {
   }
 
   def removeGarbageChildNodes(node: Node): Seq[Node] =
-    node.childNodes
-      .filterNot(node => node.nodeName == "#comment" || (node.nodeName == "#text" && node.nodeValue.trim.isEmpty))
+    node.childNodes.filterNot(isGarbageNode)
+
+  def isGarbageNode(node: Node): Boolean =
+    js.isUndefined(node) || node.nodeName == "#comment" || (node.nodeName == "#text" && node.nodeValue.trim.isEmpty)
 
   /**
-    * Recursively generates the output Scalatag's code.
+    * Recursively generates the output Scalatag's code for each HTML node and it's children.
+    *
+    * Filters out comments and empty text's nodes (garbage nodes :D) from the input HTML before converting to Scala.
     */
-  def toScalaTags(node: Node, converterType: ConverterType, inlineAttributes: Boolean): String = {
-    //gets rid of all comments and text node which are empty
+  def toScalaTags(node: Node, converterType: ConverterType): String = {
+    //removes all comment and empty text nodes.
     val childrenWithoutGarbageNodes: Seq[Node] = removeGarbageChildNodes(node)
 
     val children = childrenWithoutGarbageNodes
-      .map(toScalaTags(_, converterType, inlineAttributes))
+      .map(toScalaTags(_, converterType))
       .mkString(",\n")
 
-    //convert html node attributes/properties to scala attributes/properties
-    val scalaAttrString =
-      if (js.isUndefined(node) || js.isUndefined(node.attributes) || node.attributes.length == 0) //node has no attributes
-        ""
-      else {
-        val scalaAttrList =
-          toScalaAttributes(
-            nodeAttributes = node.attributes,
-            inlineAttributes = inlineAttributes,
-            attributePrefix = converterType.attributePrefix,
-            classAttributeKey = converterType.classAttributeKey,
-            customAttributePostfix = converterType.customAttributePostfix
-          )
-        if (!inlineAttributes) scalaAttrList.mkString("\n", ",\n", "") else scalaAttrList.mkString(", ")
-      }
+    toScalaTag(node, converterType, childrenWithoutGarbageNodes, children)
+  }
 
-    //text child nodes can be a part of the same List as the attribute List. They don't have to go to a new line.
-    val isChildNodeATextNode = childrenWithoutGarbageNodes.nonEmpty && childrenWithoutGarbageNodes.head.nodeName == "#text"
+  /**
+    * Converts a single HTML node, given it's child nodes's (@param children) already converted.
+    */
+  private def toScalaTag(node: Node,
+                         converterType: ConverterType,
+                         childrenWithoutGarbageNodes: Seq[Node],
+                         children: String): String = {
+
+    val scalaAttrList = toScalaAttributes(attributes = node.attributes, converterType)
 
     node.nodeName match {
       case "#text" =>
         tripleQuote(node.nodeValue)
 
-      case _ if scalaAttrString.isEmpty && children.isEmpty =>
+      case _ if scalaAttrList.isEmpty && children.isEmpty =>
         s"${converterType.nodePrefix + node.nodeName.toLowerCase}"
 
       case _ =>
+        val scalaAttrString =
+          if (scalaAttrList.isEmpty)
+            ""
+          else if (!converterType.newLineAttributes)
+            scalaAttrList.mkString("\n", ",\n", "")
+          else
+            scalaAttrList.mkString(", ")
+
         s"${converterType.nodePrefix + node.nodeName.toLowerCase}($scalaAttrString${
           if (children.isEmpty)
             ""
           else {
+            //text child nodes can be a part of the same List as the attribute List. They don't have to go to a new line.
+            val isChildNodeATextNode = childrenWithoutGarbageNodes.headOption.exists(_.nodeName == "#text")
             val commaMayBe = if (scalaAttrString.isEmpty) "" else ","
-            val startNewLineMayBe = if (isChildNodeATextNode && (inlineAttributes || scalaAttrString.isEmpty)) "" else "\n"
+            val startNewLineMayBe = if (isChildNodeATextNode && (converterType.newLineAttributes || scalaAttrString.isEmpty)) "" else "\n"
             //add a newLine at the end if this node has more then one child nodes
             val endNewLineMayBe = if (isChildNodeATextNode && childrenWithoutGarbageNodes.size <= 1) "" else "\n"
             s"$commaMayBe$startNewLineMayBe$children$endNewLineMayBe"
@@ -93,39 +101,39 @@ object HtmlToScalaTagsConverter extends JSApp {
   /**
     * Converts HTML node attributes to Scalatags attributes
     */
-  def toScalaAttributes(nodeAttributes: NamedNodeMap,
-                        inlineAttributes: Boolean,
-                        attributePrefix: String,
-                        classAttributeKey: String,
-                        customAttributePostfix: String): Iterable[String] =
-    nodeAttributes.map {
-      case (attrKey, attrValue) =>
-        val attrValueString = attrValue.value
-        val escapedValue = tripleQuote(attrValueString)
-        attrKey match {
-          case "class" =>
-            s"${attributePrefix + classAttributeKey + " := " + escapedValue}"
+  def toScalaAttributes(attributes: NamedNodeMap,
+                        converterType: ConverterType): Iterable[String] =
+    if (js.isUndefined(attributes) || attributes.isEmpty)
+      List.empty
+    else
+      attributes.map {
+        case (attrKey, attrValue) =>
+          val attrValueString = attrValue.value
+          val escapedValue = tripleQuote(attrValueString)
+          attrKey match {
+            case "class" =>
+              s"${converterType.attributePrefix + converterType.classAttributeKey + " := " + escapedValue}"
 
-          case "style" =>
-            val attributeKeyAndValue = attrValueString.split(";")
-            val dictionaryStrings = attributeKeyAndValue.map {
-              string =>
-                val styleKeyValue = string.split(":")
-                s""""${styleKeyValue.head.trim}" -> "${styleKeyValue.last.trim}""""
-            }.mkString(", ")
+            case "style" =>
+              val attributeKeyAndValue = attrValueString.split(";")
+              val dictionaryStrings = attributeKeyAndValue.map {
+                string =>
+                  val styleKeyValue = string.split(":")
+                  s""""${styleKeyValue.head.trim}" -> "${styleKeyValue.last.trim}""""
+              }.mkString(", ")
 
-            s"""${attributePrefix + attrKey} := js.Dictionary($dictionaryStrings)"""
+              s"""${converterType.attributePrefix + attrKey} := js.Dictionary($dictionaryStrings)"""
 
-          case "for" | "type" =>
-            s"$attributePrefix`$attrKey` := $escapedValue"
+            case "for" | "type" =>
+              s"${converterType.attributePrefix}`$attrKey` := $escapedValue"
 
-          case _ if !attrKey.matches("[a-zA-Z0-9]*$") =>
-            s"""$customAttributePostfix("$attrKey") := $escapedValue"""
+            case _ if !attrKey.matches("[a-zA-Z0-9]*$") =>
+              s"""${converterType.customAttributePostfix}("$attrKey") := $escapedValue"""
 
-          case _ =>
-            s"$attributePrefix$attrKey := $escapedValue"
-        }
-    }
+            case _ =>
+              s"${converterType.attributePrefix}$attrKey := $escapedValue"
+          }
+      }
 
   /**
     * Javascript html parser seems to add <html>, <head> and <body> tags the parsed tree by default.
