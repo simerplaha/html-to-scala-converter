@@ -71,6 +71,7 @@ object HtmlToScalaTagsConverter {
 
       case _ =>
         val nodeNameLowerCase = node.nodeName.toLowerCase
+        //fetch the node/tag name supplied by the ConverterType
         val replacedNodeName = converterType.tagNameMap.getOrElse(nodeNameLowerCase, nodeNameLowerCase)
         val nodeString = s"${converterType.nodePrefix}$replacedNodeName"
 
@@ -82,7 +83,7 @@ object HtmlToScalaTagsConverter {
             case _: ReactScalaTagsConverter | _: ScalaTagsConverter =>
               nodeString
           }
-        } else {
+        } else { //this node/tag has attributes or has children
           val scalaAttrString =
             if (scalaAttrList.isEmpty)
               ""
@@ -139,10 +140,12 @@ object HtmlToScalaTagsConverter {
               val styleValuesDictionary =
                 converterType match {
                   case _: ReactScalaTagsConverter | _: ScalaTagsConverter =>
+                    //if scalatags or scalajs-react convert the style value to dictionary
                     s"js.Dictionary(${splitAttrValueToTuples(attrValueString)})"
 
                   case _: LaminarConverter =>
-                    escapedAttrValue //if it's laminar then do not split. Simply return the javascript string value.
+                    //for laminar do not split. Simply return the javascript string value.
+                    escapedAttrValue
                 }
 
               attributeNameMapOption match {
