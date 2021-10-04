@@ -69,10 +69,12 @@ object HTMLTemplate {
           )
         ),
         tr(width := "100%")(
-          td(colspan := "2", textAlign := "center")(
+          td(colspan := "3", textAlign := "center")(
             button(cls := "button -salmon center", onclick := { () => onConvertClicked(ReactScalaTagsConverter(isNewLineAttributes)) })("Convert to Scalajs-React's VDOM (1.0.0)"),
             span("  "),
-            button(cls := "button -salmon center", onclick := { () => onConvertClicked(ScalaTagsConverter(isNewLineAttributes)) })("Convert to Scalatags (0.6.5)")
+            button(cls := "button -salmon center", onclick := { () => onConvertClicked(ScalaTagsConverter(isNewLineAttributes)) })("Convert to Scalatags (0.6.5)"),
+            span("  "),
+            button(cls := "button -salmon center", onclick := { () => onConvertClicked(LaminarConverter(isNewLineAttributes)) })("WORK IN PROGRESS - Convert to Laminar (0.13.1)")
           )
         ),
         tr(width := "100%")(
