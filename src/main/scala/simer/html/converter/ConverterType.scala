@@ -185,13 +185,21 @@ case class ReactScalaTagsConverter(newLineAttributes: Boolean) extends Converter
   val customAttributeFunctionName: String = "VdomAttr"
 
   override val tagNameMap: Map[String, String] =
-    Map.empty
+    Map(
+      "title" -> "titleTag",
+    )
 
   override val attributeNameMap: Map[String, ScalaAttributeNameMap] =
     Map(
       "class" -> ScalaAttributeNameMap("className"),
       "for" -> ScalaAttributeNameMap("`for`"),
       "type" -> ScalaAttributeNameMap("`type`"),
+      "content" -> ScalaAttributeNameMap("contentAttr"),
+      "hreflang" -> ScalaAttributeNameMap("hrefLang"),
+      "tabindex" -> ScalaAttributeNameMap("tabIndex"),
+      "styleTag" -> ScalaAttributeNameMap("styleTag"),
+      "autofocus" -> ScalaAttributeNameMap("autoFocus"),
+      "autocomplete" -> ScalaAttributeNameMap("autoComplete"),
     ) ++ ConverterType.eventAttributeNameMap
 }
 
@@ -223,7 +231,8 @@ case class LaminarConverter(newLineAttributes: Boolean) extends ConverterType {
       "param" -> "paramTag",
       "map" -> "mapTag",
       "title" -> "titleTag",
-      "object" -> "objectTag"
+      "object" -> "objectTag",
+      "noscript" -> "noScript"
     )
 
   override val attributeNameMap: Map[String, ScalaAttributeNameMap] =
@@ -249,5 +258,9 @@ case class LaminarConverter(newLineAttributes: Boolean) extends ConverterType {
       "width" -> ScalaAttributeNameMap("widthAttr"),
       "list" -> ScalaAttributeNameMap("listId"),
       "contextmenu" -> ScalaAttributeNameMap("contextMenuId"),
+      "hreflang" -> ScalaAttributeNameMap("hrefLang"),
+      "tabindex" -> ScalaAttributeNameMap("tabIndex"),
+      "autofocus" -> ScalaAttributeNameMap("autoFocus"),
+      "autocomplete" -> ScalaAttributeNameMap("autoComplete"),
     ) ++ ConverterType.eventAttributeNameMap
 }
