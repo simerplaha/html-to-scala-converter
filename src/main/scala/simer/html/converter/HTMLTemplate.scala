@@ -27,7 +27,7 @@ object HTMLTemplate {
             h4("HTML")
           ),
           th(width := "50%")(
-            h4("Scalatags")
+            h4("Scala")
           )
         ),
         tr(width := "100%")(

@@ -6,11 +6,10 @@ import org.scalajs.dom.html.TextArea
 import org.scalajs.dom.raw.{DOMParser, NamedNodeMap, Node}
 
 import scala.scalajs.js
-import scala.scalajs.js.JSApp
 
-object HtmlToScalaTagsConverter extends JSApp {
+object HtmlToScalaTagsConverter {
 
-  def main(): Unit = {
+  def main(args: Array[String]): Unit = {
     val template = HTMLTemplate.template(runConverter)
     dom.document.getElementById("content").appendChild(template.render)
   }
@@ -24,7 +23,7 @@ object HtmlToScalaTagsConverter extends JSApp {
     val scalaCodes = rootChildNodes.map(toScalaTags(_, converterType))
     val scalaCode =
       if (scalaCodes.size > 1) {
-        val fixMe = s"""//FIXME - MULTIPLE HTML TREES PASSED TO THE CONVERTER. THIS MIGHT GENERATE UNEXPECTED SCALATAGS CODE. Check <!DOCTYPE html> is not in the input HTML."""
+        val fixMe = s"""//FIXME - MULTIPLE HTML TREES PASSED TO THE CONVERTER. THIS MIGHT GENERATE UNEXPECTED CODE. Check <!DOCTYPE html> is not in the input HTML."""
         fixMe + "\n" + scalaCodes.mkString(", ")
       } else
         scalaCodes.mkString(", ")
@@ -33,7 +32,7 @@ object HtmlToScalaTagsConverter extends JSApp {
     scalaCodeTextArea.value = scalaCodeWithoutParserAddedTags.trim
   }
 
-  def removeGarbageChildNodes(node: Node): Seq[Node] =
+  def removeGarbageChildNodes(node: Node): collection.Seq[Node] =
     node.childNodes.filterNot(isGarbageNode)
 
   def isGarbageNode(node: Node): Boolean =
@@ -46,7 +45,7 @@ object HtmlToScalaTagsConverter extends JSApp {
     */
   def toScalaTags(node: Node, converterType: ConverterType): String = {
     //removes all comment and empty text nodes.
-    val childrenWithoutGarbageNodes: Seq[Node] = removeGarbageChildNodes(node)
+    val childrenWithoutGarbageNodes: collection.Seq[Node] = removeGarbageChildNodes(node)
 
     val children = childrenWithoutGarbageNodes
       .map(toScalaTags(_, converterType))
@@ -60,7 +59,7 @@ object HtmlToScalaTagsConverter extends JSApp {
     */
   private def toScalaTag(node: Node,
                          converterType: ConverterType,
-                         childrenWithoutGarbageNodes: Seq[Node],
+                         childrenWithoutGarbageNodes: collection.Seq[Node],
                          children: String): String = {
 
     val scalaAttrList = toScalaAttributes(attributes = node.attributes, converterType)
@@ -81,10 +80,10 @@ object HtmlToScalaTagsConverter extends JSApp {
           else
             scalaAttrList.mkString(", ")
 
-        s"${converterType.nodePrefix + node.nodeName.toLowerCase}($scalaAttrString${
-          if (children.isEmpty)
+        val childrenString =
+          if (children.isEmpty) {
             ""
-          else {
+          } else {
             //text child nodes can be a part of the same List as the attribute List. They don't have to go to a new line.
             val isChildNodeATextNode = childrenWithoutGarbageNodes.headOption.exists(_.nodeName == "#text")
             val commaMayBe = if (scalaAttrString.isEmpty) "" else ","
@@ -93,8 +92,8 @@ object HtmlToScalaTagsConverter extends JSApp {
             val endNewLineMayBe = if (isChildNodeATextNode && childrenWithoutGarbageNodes.size <= 1) "" else "\n"
             s"$commaMayBe$startNewLineMayBe$children$endNewLineMayBe"
           }
-        })"
 
+        s"${converterType.nodePrefix + node.nodeName.toLowerCase}($scalaAttrString$childrenString)"
     }
   }
 
