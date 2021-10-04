@@ -47,9 +47,10 @@ object HtmlToScalaTagsConverter {
     //removes all comment and empty text nodes.
     val childrenWithoutGarbageNodes: collection.Seq[Node] = removeGarbageChildNodes(node)
 
-    val children = childrenWithoutGarbageNodes
-      .map(toScalaTags(_, converterType))
-      .mkString(",\n")
+    val children =
+      childrenWithoutGarbageNodes
+        .map(toScalaTags(_, converterType))
+        .mkString(",\n")
 
     toScalaTag(node, converterType, childrenWithoutGarbageNodes, children)
   }
@@ -68,34 +69,56 @@ object HtmlToScalaTagsConverter {
       case "#text" =>
         tripleQuote(node.nodeValue)
 
-      case _ if scalaAttrList.isEmpty && children.isEmpty =>
-        s"${converterType.nodePrefix + node.nodeName.toLowerCase}"
-
       case _ =>
-        val scalaAttrString =
-          if (scalaAttrList.isEmpty)
-            ""
-          else if (!converterType.newLineAttributes)
-            scalaAttrList.mkString("\n", ",\n", "")
-          else
-            scalaAttrList.mkString(", ")
+        val nodeNameLowerCase = node.nodeName.toLowerCase
+        val replacedNodeName = converterType.tagNameMap.getOrElse(nodeNameLowerCase, nodeNameLowerCase)
+        val nodeString = s"${converterType.nodePrefix}$replacedNodeName"
 
-        val childrenString =
-          if (children.isEmpty) {
-            ""
-          } else {
-            //text child nodes can be a part of the same List as the attribute List. They don't have to go to a new line.
-            val isChildNodeATextNode = childrenWithoutGarbageNodes.headOption.exists(_.nodeName == "#text")
-            val commaMayBe = if (scalaAttrString.isEmpty) "" else ","
-            val startNewLineMayBe = if (isChildNodeATextNode && (converterType.newLineAttributes || scalaAttrString.isEmpty)) "" else "\n"
-            //add a newLine at the end if this node has more then one child nodes
-            val endNewLineMayBe = if (isChildNodeATextNode && childrenWithoutGarbageNodes.size <= 1) "" else "\n"
-            s"$commaMayBe$startNewLineMayBe$children$endNewLineMayBe"
+        if (scalaAttrList.isEmpty && children.isEmpty) {
+          converterType match {
+            case _: LaminarConverter =>
+              s"$nodeString()" //laminar requires nodes to be closed eg: br()
+
+            case _: ReactScalaTagsConverter | _: ScalaTagsConverter =>
+              nodeString
           }
+        } else {
+          val scalaAttrString =
+            if (scalaAttrList.isEmpty)
+              ""
+            else if (!converterType.newLineAttributes)
+              scalaAttrList.mkString("\n", ",\n", "")
+            else
+              scalaAttrList.mkString(", ")
 
-        s"${converterType.nodePrefix + node.nodeName.toLowerCase}($scalaAttrString$childrenString)"
+          val childrenString =
+            if (children.isEmpty) {
+              ""
+            } else {
+              //text child nodes can be a part of the same List as the attribute List. They don't have to go to a new line.
+              val isChildNodeATextNode = childrenWithoutGarbageNodes.headOption.exists(_.nodeName == "#text")
+              val commaMayBe = if (scalaAttrString.isEmpty) "" else ","
+              val startNewLineMayBe = if (isChildNodeATextNode && (converterType.newLineAttributes || scalaAttrString.isEmpty)) "" else "\n"
+              //add a newLine at the end if this node has more then one child nodes
+              val endNewLineMayBe = if (isChildNodeATextNode && childrenWithoutGarbageNodes.size <= 1) "" else "\n"
+              s"$commaMayBe$startNewLineMayBe$children$endNewLineMayBe"
+            }
+
+          s"$nodeString($scalaAttrString$childrenString)"
+        }
     }
   }
+
+  /**
+    * Converts input string of format "list-style: none; padding: 0;"
+    * to ("list-style" -> "none", "padding" -> "0")
+    */
+  def splitAttrValueToTuples(attrValueString: String) =
+    attrValueString.split(";").map {
+      string =>
+        val styleKeyValue = string.split(":")
+        s""""${styleKeyValue.head.trim}" -> "${styleKeyValue.last.trim}""""
+    }.mkString(", ")
 
   /**
     * Converts HTML node attributes to Scalatags attributes
@@ -108,29 +131,39 @@ object HtmlToScalaTagsConverter {
       attributes.map {
         case (attrKey, attrValue) =>
           val attrValueString = attrValue.value
-          val escapedValue = tripleQuote(attrValueString)
+          val escapedAttrValue = tripleQuote(attrValueString)
+          val attributeNameMapOption = converterType.attributeNameMap.get(attrKey)
+
           attrKey match {
-            case "class" =>
-              s"${converterType.attributePrefix + converterType.classAttributeKey + " := " + escapedValue}"
-
             case "style" =>
-              val attributeKeyAndValue = attrValueString.split(";")
-              val dictionaryStrings = attributeKeyAndValue.map {
-                string =>
-                  val styleKeyValue = string.split(":")
-                  s""""${styleKeyValue.head.trim}" -> "${styleKeyValue.last.trim}""""
-              }.mkString(", ")
+              val styleValuesDictionary =
+                converterType match {
+                  case _: ReactScalaTagsConverter | _: ScalaTagsConverter =>
+                    s"js.Dictionary(${splitAttrValueToTuples(attrValueString)})"
 
-              s"""${converterType.attributePrefix + attrKey} := js.Dictionary($dictionaryStrings)"""
+                  case _: LaminarConverter =>
+                    escapedAttrValue //if it's laminar then do not split. Simply return the javascript string value.
+                }
 
-            case "for" | "type" =>
-              s"${converterType.attributePrefix}`$attrKey` := $escapedValue"
+              attributeNameMapOption match {
+                case Some(attrNameMap) =>
+                  s"""${converterType.attributePrefix}${attrNameMap.keyName} ${attrNameMap.functionName} $styleValuesDictionary"""
 
-            case _ if !attrKey.matches("[a-zA-Z0-9]*$") =>
-              s"""${converterType.customAttributePostfix}("$attrKey") := $escapedValue"""
+                case None =>
+                  s"""${converterType.attributePrefix}$attrKey := $styleValuesDictionary"""
+              }
 
             case _ =>
-              s"${converterType.attributePrefix}$attrKey := $escapedValue"
+              attributeNameMapOption match {
+                case Some(attrNameMap) =>
+                  s"${converterType.attributePrefix}${attrNameMap.keyName} ${attrNameMap.functionName} $escapedAttrValue"
+
+                case None =>
+                  if (attrKey.matches("[a-zA-Z0-9]*$"))
+                    s"${converterType.attributePrefix}$attrKey := $escapedAttrValue"
+                  else //else it's a custom attribute
+                    s"""${converterType.customAttributeFunctionName}("$attrKey") := $escapedAttrValue"""
+              }
           }
       }
 
@@ -160,6 +193,7 @@ object HtmlToScalaTagsConverter {
     string.trim match {
       case string if string.contains("\"") || string.contains("\n") || string.contains("\\") =>
         s"""\"\"\"$string\"\"\""""
+
       case string =>
         s""""$string""""
     }
