@@ -13,7 +13,7 @@ object HTMLTemplate {
     div(
       ul(
         li(
-          a(href := "#")("HTML TO SCALATAGS CONVERTER")
+          a(href := "#")("HTML TO SCALA CONVERTER")
         ),
         li(float := "right",
           u(

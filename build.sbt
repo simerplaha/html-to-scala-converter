@@ -1,6 +1,6 @@
 enablePlugins(ScalaJSPlugin)
 
-name := "HtmlToScalaTagsConverter"
+name := "HtmlToScalaConverter"
 
 version := "1.0.0"
 
