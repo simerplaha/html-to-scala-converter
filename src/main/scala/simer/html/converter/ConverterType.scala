@@ -232,7 +232,8 @@ case class LaminarConverter(newLineAttributes: Boolean) extends ConverterType {
       "map" -> "mapTag",
       "title" -> "titleTag",
       "object" -> "objectTag",
-      "noscript" -> "noScript"
+      "noscript" -> "noScript",
+      "textarea" -> "textArea"
     )
 
   override val attributeNameMap: Map[String, ScalaAttributeNameMap] =
@@ -262,5 +263,6 @@ case class LaminarConverter(newLineAttributes: Boolean) extends ConverterType {
       "tabindex" -> ScalaAttributeNameMap("tabIndex"),
       "autofocus" -> ScalaAttributeNameMap("autoFocus"),
       "autocomplete" -> ScalaAttributeNameMap("autoComplete"),
+      "readonly" -> ScalaAttributeNameMap("readOnly"),
     ) ++ ConverterType.eventAttributeNameMap
 }
