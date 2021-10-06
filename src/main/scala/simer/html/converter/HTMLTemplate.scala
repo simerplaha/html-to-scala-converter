@@ -35,7 +35,7 @@ object HTMLTemplate {
             textarea(id := "htmlCode", cls := "boxsizingBorder", width := "100%", rows := 26, placeholder := "Enter your HTML code here.")(
               """<div class="myClass">
                 |    <div class="someClass" data-attribute="someValue">
-                |        <button type="button" class="btn btn-default">Button</button>
+                |        <button type="button" class="btn btn-default" tabindex="-1">Button</button>
                 |    </div>
                 |    <br/>
                 |    <span>
