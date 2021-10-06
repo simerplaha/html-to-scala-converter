@@ -2,8 +2,8 @@ package simer.html.converter
 
 import org.scalajs.dom
 import org.scalajs.dom.html.Input
-
 import scalatags.JsDom.all._
+import simer.html.converter.ConverterType.{Laminar, ScalaJSReact, ScalaTags}
 
 object HTMLTemplate {
 
@@ -70,11 +70,11 @@ object HTMLTemplate {
         ),
         tr(width := "100%")(
           td(colspan := "3", textAlign := "center")(
-            button(cls := "button -salmon center", onclick := { () => onConvertClicked(ReactScalaTagsConverter(isNewLineAttributes)) })("Convert to Scalajs-React's VDOM (1.7.7)"),
+            button(cls := "button -salmon center", onclick := { () => onConvertClicked(ScalaJSReact(isNewLineAttributes)) })("Convert to Scalajs-React's VDOM (1.7.7)"),
             span("  "),
-            button(cls := "button -salmon center", onclick := { () => onConvertClicked(ScalaTagsConverter(isNewLineAttributes)) })("Convert to Scalatags (0.9.4)"),
+            button(cls := "button -salmon center", onclick := { () => onConvertClicked(ScalaTags(isNewLineAttributes)) })("Convert to Scalatags (0.9.4)"),
             span("  "),
-            button(cls := "button -salmon center", onclick := { () => onConvertClicked(LaminarConverter(isNewLineAttributes)) })("Convert to Laminar (0.13.1)")
+            button(cls := "button -salmon center", onclick := { () => onConvertClicked(Laminar(isNewLineAttributes)) })("Convert to Laminar (0.13.1)")
           ),
         ),
         tr(width := "100%")(

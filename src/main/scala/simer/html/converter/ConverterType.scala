@@ -1,21 +1,6 @@
 package simer.html.converter
 
-/**
-  * Defines mapping for HTML attribute key names to target Scala's key and function name
-  *
-  * For example to convert `onclick = "alert("");"` to `onClick <-- "alert("");"`
-  * this map entry should be
-  * {{{
-  *   map.put("onclick", ScalaAttrNameMap("onClick", "<--"))
-  * }}}
-  *
-  * @see [[LaminarConverter.attributeNameMap]]
-  * @param keyName      name of the key in Scala
-  * @param functionName name of function in Scala. Defaults to :=
-  */
-
-case class ScalaAttributeNameMap(keyName: String,
-                                 functionName: String = ":=")
+import simer.html.converter.AttributeType.{BooleanAttribute, EventAttribute, IntAttribute, StringAttribute}
 
 sealed trait ConverterType {
   val attributePrefix: String
@@ -23,246 +8,138 @@ sealed trait ConverterType {
   val customAttributeFunctionName: String
   val newLineAttributes: Boolean
   //stores name conversions for html attribute names to scala names
-  val attributeNameMap: Map[String, ScalaAttributeNameMap]
+  val attributeNameMap: Map[String, AttributeType]
   val tagNameMap: Map[String, String]
 }
 
 object ConverterType {
-  //event names in Scala are camel cased for Laminar and Scalajs-react.
-  val eventAttributeNameMap =
-    Map(
-      s"onchange" -> ScalaAttributeNameMap("onChange", "-->"),
-      s"onclick" -> ScalaAttributeNameMap("onClick", "-->"),
-      s"onclickcapture" -> ScalaAttributeNameMap("onClickCapture", "-->"),
-      s"onetimecode" -> ScalaAttributeNameMap("oneTimeCode", "-->"),
-      s"onabort" -> ScalaAttributeNameMap("onAbort", "-->"),
-      s"onabortcapture" -> ScalaAttributeNameMap("onAbortCapture", "-->"),
-      s"onanimationend" -> ScalaAttributeNameMap("onAnimationEnd", "-->"),
-      s"onanimationendcapture" -> ScalaAttributeNameMap("onAnimationEndCapture", "-->"),
-      s"onanimationiteration" -> ScalaAttributeNameMap("onAnimationIteration", "-->"),
-      s"onanimationiterationcapture" -> ScalaAttributeNameMap("onAnimationIterationCapture", "-->"),
-      s"onanimationstart" -> ScalaAttributeNameMap("onAnimationStart", "-->"),
-      s"onanimationstartcapture" -> ScalaAttributeNameMap("onAnimationStartCapture", "-->"),
-      s"onauxclick" -> ScalaAttributeNameMap("onAuxClick", "-->"),
-      s"onauxclickcapture" -> ScalaAttributeNameMap("onAuxClickCapture", "-->"),
-      s"onbeforeinput" -> ScalaAttributeNameMap("onBeforeInput", "-->"),
-      s"onblur" -> ScalaAttributeNameMap("onBlur", "-->"),
-      s"onblurcapture" -> ScalaAttributeNameMap("onBlurCapture", "-->"),
-      s"oncanplay" -> ScalaAttributeNameMap("onCanPlay", "-->"),
-      s"oncanplaycapture" -> ScalaAttributeNameMap("onCanPlayCapture", "-->"),
-      s"oncanplaythrough" -> ScalaAttributeNameMap("onCanPlayThrough", "-->"),
-      s"oncompositionend" -> ScalaAttributeNameMap("onCompositionEnd", "-->"),
-      s"oncompositionstart" -> ScalaAttributeNameMap("onCompositionStart", "-->"),
-      s"oncompositionupdate" -> ScalaAttributeNameMap("onCompositionUpdate", "-->"),
-      s"oncontextmenu" -> ScalaAttributeNameMap("onContextMenu", "-->"),
-      s"oncontextmenucapture" -> ScalaAttributeNameMap("onContextMenuCapture", "-->"),
-      s"oncopy" -> ScalaAttributeNameMap("onCopy", "-->"),
-      s"oncopycapture" -> ScalaAttributeNameMap("onCopyCapture", "-->"),
-      s"oncut" -> ScalaAttributeNameMap("onCut", "-->"),
-      s"oncutcapture" -> ScalaAttributeNameMap("onCutCapture", "-->"),
-      s"ondblclick" -> ScalaAttributeNameMap("onDblClick", "-->"),
-      s"ondoubleclick" -> ScalaAttributeNameMap("onDoubleClick", "-->"),
-      s"ondoubleclickcapture" -> ScalaAttributeNameMap("onDoubleClickCapture", "-->"),
-      s"ondrag" -> ScalaAttributeNameMap("onDrag", "-->"),
-      s"ondragcapture" -> ScalaAttributeNameMap("onDragCapture", "-->"),
-      s"ondragend" -> ScalaAttributeNameMap("onDragEnd", "-->"),
-      s"ondragendcapture" -> ScalaAttributeNameMap("onDragEndCapture", "-->"),
-      s"ondragenter" -> ScalaAttributeNameMap("onDragEnter", "-->"),
-      s"ondragentercapture" -> ScalaAttributeNameMap("onDragEnterCapture", "-->"),
-      s"ondragexit" -> ScalaAttributeNameMap("onDragExit", "-->"),
-      s"ondragexitcapture" -> ScalaAttributeNameMap("onDragExitCapture", "-->"),
-      s"ondragleave" -> ScalaAttributeNameMap("onDragLeave", "-->"),
-      s"ondragleavecapture" -> ScalaAttributeNameMap("onDragLeaveCapture", "-->"),
-      s"ondragover" -> ScalaAttributeNameMap("onDragOver", "-->"),
-      s"ondragovercapture" -> ScalaAttributeNameMap("onDragOverCapture", "-->"),
-      s"ondragstart" -> ScalaAttributeNameMap("onDragStart", "-->"),
-      s"ondragstartcapture" -> ScalaAttributeNameMap("onDragStartCapture", "-->"),
-      s"ondrop" -> ScalaAttributeNameMap("onDrop", "-->"),
-      s"ondropcapture" -> ScalaAttributeNameMap("onDropCapture", "-->"),
-      s"ondurationchange" -> ScalaAttributeNameMap("onDurationChange", "-->"),
-      s"ondurationchangecapture" -> ScalaAttributeNameMap("onDurationChangeCapture", "-->"),
-      s"onemptied" -> ScalaAttributeNameMap("onEmptied", "-->"),
-      s"onemptiedcapture" -> ScalaAttributeNameMap("onEmptiedCapture", "-->"),
-      s"onencrypted" -> ScalaAttributeNameMap("onEncrypted", "-->"),
-      s"onencryptedcapture" -> ScalaAttributeNameMap("onEncryptedCapture", "-->"),
-      s"onended" -> ScalaAttributeNameMap("onEnded", "-->"),
-      s"onendedcapture" -> ScalaAttributeNameMap("onEndedCapture", "-->"),
-      s"onerror" -> ScalaAttributeNameMap("onError", "-->"),
-      s"onerrorcapture" -> ScalaAttributeNameMap("onErrorCapture", "-->"),
-      s"onfocus" -> ScalaAttributeNameMap("onFocus", "-->"),
-      s"onfocuscapture" -> ScalaAttributeNameMap("onFocusCapture", "-->"),
-      s"oninput" -> ScalaAttributeNameMap("onInput", "-->"),
-      s"oninputcapture" -> ScalaAttributeNameMap("onInputCapture", "-->"),
-      s"oninvalid" -> ScalaAttributeNameMap("onInvalid", "-->"),
-      s"oninvalidcapture" -> ScalaAttributeNameMap("onInvalidCapture", "-->"),
-      s"onkeydown" -> ScalaAttributeNameMap("onKeyDown", "-->"),
-      s"onkeydowncapture" -> ScalaAttributeNameMap("onKeyDownCapture", "-->"),
-      s"onkeypress" -> ScalaAttributeNameMap("onKeyPress", "-->"),
-      s"onkeypresscapture" -> ScalaAttributeNameMap("onKeyPressCapture", "-->"),
-      s"onkeyup" -> ScalaAttributeNameMap("onKeyUp", "-->"),
-      s"onkeyupcapture" -> ScalaAttributeNameMap("onKeyUpCapture", "-->"),
-      s"onload" -> ScalaAttributeNameMap("onLoad", "-->"),
-      s"onloadcapture" -> ScalaAttributeNameMap("onLoadCapture", "-->"),
-      s"onloadstart" -> ScalaAttributeNameMap("onLoadStart", "-->"),
-      s"onloadstartcapture" -> ScalaAttributeNameMap("onLoadStartCapture", "-->"),
-      s"onloadeddata" -> ScalaAttributeNameMap("onLoadedData", "-->"),
-      s"onloadeddatacapture" -> ScalaAttributeNameMap("onLoadedDataCapture", "-->"),
-      s"onloadedmetadata" -> ScalaAttributeNameMap("onLoadedMetadata", "-->"),
-      s"onloadedmetadatacapture" -> ScalaAttributeNameMap("onLoadedMetadataCapture", "-->"),
-      s"onmousedown" -> ScalaAttributeNameMap("onMouseDown", "-->"),
-      s"onmousedowncapture" -> ScalaAttributeNameMap("onMouseDownCapture", "-->"),
-      s"onmouseenter" -> ScalaAttributeNameMap("onMouseEnter", "-->"),
-      s"onmouseleave" -> ScalaAttributeNameMap("onMouseLeave", "-->"),
-      s"onmousemove" -> ScalaAttributeNameMap("onMouseMove", "-->"),
-      s"onmousemovecapture" -> ScalaAttributeNameMap("onMouseMoveCapture", "-->"),
-      s"onmouseout" -> ScalaAttributeNameMap("onMouseOut", "-->"),
-      s"onmouseoutcapture" -> ScalaAttributeNameMap("onMouseOutCapture", "-->"),
-      s"onmouseover" -> ScalaAttributeNameMap("onMouseOver", "-->"),
-      s"onmouseovercapture" -> ScalaAttributeNameMap("onMouseOverCapture", "-->"),
-      s"onmouseup" -> ScalaAttributeNameMap("onMouseUp", "-->"),
-      s"onmouseupcapture" -> ScalaAttributeNameMap("onMouseUpCapture", "-->"),
-      s"onpaste" -> ScalaAttributeNameMap("onPaste", "-->"),
-      s"onpastecapture" -> ScalaAttributeNameMap("onPasteCapture", "-->"),
-      s"onpause" -> ScalaAttributeNameMap("onPause", "-->"),
-      s"onpausecapture" -> ScalaAttributeNameMap("onPauseCapture", "-->"),
-      s"onplay" -> ScalaAttributeNameMap("onPlay", "-->"),
-      s"onplaycapture" -> ScalaAttributeNameMap("onPlayCapture", "-->"),
-      s"onplaying" -> ScalaAttributeNameMap("onPlaying", "-->"),
-      s"onplayingcapture" -> ScalaAttributeNameMap("onPlayingCapture", "-->"),
-      s"ongotpointercapture" -> ScalaAttributeNameMap("onGotPointerCapture", "-->"),
-      s"onlostpointercapture" -> ScalaAttributeNameMap("onLostPointerCapture", "-->"),
-      s"onpointercancel" -> ScalaAttributeNameMap("onPointerCancel", "-->"),
-      s"onpointerdown" -> ScalaAttributeNameMap("onPointerDown", "-->"),
-      s"onpointerenter" -> ScalaAttributeNameMap("onPointerEnter", "-->"),
-      s"onpointerleave" -> ScalaAttributeNameMap("onPointerLeave", "-->"),
-      s"onpointermove" -> ScalaAttributeNameMap("onPointerMove", "-->"),
-      s"onpointerout" -> ScalaAttributeNameMap("onPointerOut", "-->"),
-      s"onpointerover" -> ScalaAttributeNameMap("onPointerOver", "-->"),
-      s"onpointerup" -> ScalaAttributeNameMap("onPointerUp", "-->"),
-      s"onprogress" -> ScalaAttributeNameMap("onProgress", "-->"),
-      s"onprogresscapture" -> ScalaAttributeNameMap("onProgressCapture", "-->"),
-      s"onratechange" -> ScalaAttributeNameMap("onRateChange", "-->"),
-      s"onratechangecapture" -> ScalaAttributeNameMap("onRateChangeCapture", "-->"),
-      s"onreset" -> ScalaAttributeNameMap("onReset", "-->"),
-      s"onresetcapture" -> ScalaAttributeNameMap("onResetCapture", "-->"),
-      s"onscroll" -> ScalaAttributeNameMap("onScroll", "-->"),
-      s"onscrollcapture" -> ScalaAttributeNameMap("onScrollCapture", "-->"),
-      s"onseeked" -> ScalaAttributeNameMap("onSeeked", "-->"),
-      s"onseekedcapture" -> ScalaAttributeNameMap("onSeekedCapture", "-->"),
-      s"onseeking" -> ScalaAttributeNameMap("onSeeking", "-->"),
-      s"onseekingcapture" -> ScalaAttributeNameMap("onSeekingCapture", "-->"),
-      s"onselect" -> ScalaAttributeNameMap("onSelect", "-->"),
-      s"onstalled" -> ScalaAttributeNameMap("onStalled", "-->"),
-      s"onstalledcapture" -> ScalaAttributeNameMap("onStalledCapture", "-->"),
-      s"onsubmit" -> ScalaAttributeNameMap("onSubmit", "-->"),
-      s"onsubmitcapture" -> ScalaAttributeNameMap("onSubmitCapture", "-->"),
-      s"onsuspend" -> ScalaAttributeNameMap("onSuspend", "-->"),
-      s"onsuspendcapture" -> ScalaAttributeNameMap("onSuspendCapture", "-->"),
-      s"ontimeupdate" -> ScalaAttributeNameMap("onTimeUpdate", "-->"),
-      s"ontimeupdatecapture" -> ScalaAttributeNameMap("onTimeUpdateCapture", "-->"),
-      s"ontouchcancel" -> ScalaAttributeNameMap("onTouchCancel", "-->"),
-      s"ontouchcancelcapture" -> ScalaAttributeNameMap("onTouchCancelCapture", "-->"),
-      s"ontouchend" -> ScalaAttributeNameMap("onTouchEnd", "-->"),
-      s"ontouchendcapture" -> ScalaAttributeNameMap("onTouchEndCapture", "-->"),
-      s"ontouchmove" -> ScalaAttributeNameMap("onTouchMove", "-->"),
-      s"ontouchmovecapture" -> ScalaAttributeNameMap("onTouchMoveCapture", "-->"),
-      s"ontouchstart" -> ScalaAttributeNameMap("onTouchStart", "-->"),
-      s"ontouchstartcapture" -> ScalaAttributeNameMap("onTouchStartCapture", "-->"),
-      s"ontransitionend" -> ScalaAttributeNameMap("onTransitionEnd", "-->"),
-      s"ontransitionendcapture" -> ScalaAttributeNameMap("onTransitionEndCapture", "-->"),
-      s"onvolumechange" -> ScalaAttributeNameMap("onVolumeChange", "-->"),
-      s"onvolumechangecapture" -> ScalaAttributeNameMap("onVolumeChangeCapture", "-->"),
-      s"onwaiting" -> ScalaAttributeNameMap("onWaiting", "-->"),
-      s"onwaitingcapture" -> ScalaAttributeNameMap("onWaitingCapture", "-->"),
-      s"onwheel" -> ScalaAttributeNameMap("onWheel", "-->"),
-      s"onwheelcapture" -> ScalaAttributeNameMap("onWheelCapture", "-->")
-    )
-}
 
-case class ReactScalaTagsConverter(newLineAttributes: Boolean) extends ConverterType {
-  val attributePrefix: String = "^."
-  val nodePrefix: String = "<."
-  val customAttributeFunctionName: String = "VdomAttr"
+  object ScalaJSReact {
+    //attributes naming and type convention found in ScalaJS-React
+    val dataAttributes =
+      Map(
+        "class" -> StringAttribute("className"),
+        "for" -> StringAttribute("`for`"),
+        "type" -> StringAttribute("`type`"),
+        "content" -> StringAttribute("contentAttr"),
+        "hreflang" -> StringAttribute("hrefLang"),
+        "tabindex" -> IntAttribute("tabIndex"),
+        "styleTag" -> StringAttribute("styleTag"),
+        "autocomplete" -> StringAttribute("autoComplete"),
+        "allowfullscreen" -> BooleanAttribute("allowFullScreen"),
+        "allowtransparency" -> BooleanAttribute("allowTransparency"),
+        "async" -> BooleanAttribute("async"),
+        "autocorrect" -> BooleanAttribute("autoCorrect"),
+        "autofocus" -> BooleanAttribute("autoFocus"),
+        "autoplay" -> BooleanAttribute("autoPlay"),
+        "autosave" -> BooleanAttribute("autoSave"),
+        "checked" -> BooleanAttribute("checked"),
+        "colspan" -> IntAttribute("colSpan"),
+        "controls" -> BooleanAttribute("controls"),
+        "default" -> BooleanAttribute("default"),
+        "defer" -> BooleanAttribute("defer"),
+        "disablepictureinpicture" -> BooleanAttribute("disablePictureInPicture"),
+        "disabled" -> BooleanAttribute("disabled"),
+        "draggable" -> BooleanAttribute("draggable"),
+        "formnovalidate" -> BooleanAttribute("formNoValidate"),
+        "hidden" -> BooleanAttribute("hidden"),
+        "itemscope" -> BooleanAttribute("itemScope"),
+        "loop" -> BooleanAttribute("loop"),
+        "maxlength" -> IntAttribute("maxLength"),
+        "minlength" -> IntAttribute("minLength"),
+        "multiple" -> BooleanAttribute("multiple"),
+        "muted" -> BooleanAttribute("muted"),
+        "nomodule" -> BooleanAttribute("noModule"),
+        "novalidate" -> BooleanAttribute("noValidate"),
+        "open" -> BooleanAttribute("open"),
+        "playsinline" -> BooleanAttribute("playsInline"),
+        "radiogroup" -> StringAttribute("radioGroup"),
+        "readonly" -> BooleanAttribute("readOnly"),
+        "required" -> BooleanAttribute("required"),
+        "reversed" -> BooleanAttribute("reversed"),
+        "rowspan" -> IntAttribute("rowSpan"),
+        "rows" -> IntAttribute("rows"),
+        "scoped" -> BooleanAttribute("scoped"),
+        "seamless" -> BooleanAttribute("seamless"),
+        "selected" -> BooleanAttribute("selected"),
+        "size" -> IntAttribute("size"),
+        "spellcheck" -> BooleanAttribute("spellCheck"),
+        "contextmenu" -> StringAttribute("contextMenu"),
+        "autocapitalize" -> StringAttribute("autoCapitalize"),
+      )
+  }
 
-  override val tagNameMap: Map[String, String] =
-    Map(
-      "title" -> "titleTag",
-    )
+  case class ScalaJSReact(newLineAttributes: Boolean) extends ConverterType {
+    val attributePrefix: String = "^."
+    val nodePrefix: String = "<."
+    val customAttributeFunctionName: String = "VdomAttr"
 
-  override val attributeNameMap: Map[String, ScalaAttributeNameMap] =
-    Map(
-      "class" -> ScalaAttributeNameMap("className"),
-      "for" -> ScalaAttributeNameMap("`for`"),
-      "type" -> ScalaAttributeNameMap("`type`"),
-      "content" -> ScalaAttributeNameMap("contentAttr"),
-      "hreflang" -> ScalaAttributeNameMap("hrefLang"),
-      "tabindex" -> ScalaAttributeNameMap("tabIndex"),
-      "styleTag" -> ScalaAttributeNameMap("styleTag"),
-      "autofocus" -> ScalaAttributeNameMap("autoFocus"),
-      "autocomplete" -> ScalaAttributeNameMap("autoComplete"),
-    ) ++ ConverterType.eventAttributeNameMap
-}
+    override val tagNameMap: Map[String, String] =
+      Map(
+        "title" -> "titleTag",
+        "style" -> "styleTag"
+      )
 
-case class ScalaTagsConverter(newLineAttributes: Boolean) extends ConverterType {
-  val attributePrefix: String = ""
-  val nodePrefix: String = ""
-  val customAttributeFunctionName: String = "attr"
+    override val attributeNameMap: Map[String, AttributeType] =
+      ScalaJSReact.dataAttributes ++ EventAttribute.reactAndLaminarEventAttributes
+  }
 
-  override val tagNameMap: Map[String, String] =
-    Map.empty
+  case class ScalaTags(newLineAttributes: Boolean) extends ConverterType {
+    val attributePrefix: String = ""
+    val nodePrefix: String = ""
+    val customAttributeFunctionName: String = "attr"
 
-  override val attributeNameMap: Map[String, ScalaAttributeNameMap] =
-    Map(
-      "class" -> ScalaAttributeNameMap("cls"),
-      "for" -> ScalaAttributeNameMap("`for`"),
-      "type" -> ScalaAttributeNameMap("`type`")
-    )
-}
+    override val tagNameMap: Map[String, String] =
+      Map.empty
 
-case class LaminarConverter(newLineAttributes: Boolean) extends ConverterType {
-  val attributePrefix: String = ""
-  val nodePrefix: String = ""
-  val customAttributeFunctionName: String = "dataAttr"
+    override val attributeNameMap: Map[String, AttributeType] =
+      Map(
+        "class" -> StringAttribute("cls"),
+        "for" -> StringAttribute("`for`"),
+        "type" -> StringAttribute("`type`")
+      )
+  }
 
-  override val tagNameMap: Map[String, String] =
-    Map(
-      "style" -> "styleTag",
-      "link" -> "linkTag",
-      "param" -> "paramTag",
-      "map" -> "mapTag",
-      "title" -> "titleTag",
-      "object" -> "objectTag",
-      "noscript" -> "noScript",
-      "textarea" -> "textArea"
-    )
+  case class Laminar(newLineAttributes: Boolean) extends ConverterType {
+    val attributePrefix: String = ""
+    val nodePrefix: String = ""
+    val customAttributeFunctionName: String = "dataAttr"
 
-  override val attributeNameMap: Map[String, ScalaAttributeNameMap] =
-    Map(
-      "class" -> ScalaAttributeNameMap("cls"),
-      "for" -> ScalaAttributeNameMap("forId"),
-      "type" -> ScalaAttributeNameMap("tpe"),
-      "value" -> ScalaAttributeNameMap("defaultValue"),
-      "checked" -> ScalaAttributeNameMap("defaultChecked"),
-      "selected" -> ScalaAttributeNameMap("defaultSelected"),
-      "for" -> ScalaAttributeNameMap("forId"),
-      "id" -> ScalaAttributeNameMap("idAttr"),
-      "max" -> ScalaAttributeNameMap("maxAttr"),
-      "min" -> ScalaAttributeNameMap("minAttr"),
-      "step" -> ScalaAttributeNameMap("stepAttr"),
-      "offset" -> ScalaAttributeNameMap("offsetAttr"),
-      "result" -> ScalaAttributeNameMap("resultAttr"),
-      "loading" -> ScalaAttributeNameMap("loadingAttr"),
-      "style" -> ScalaAttributeNameMap("styleAttr"),
-      "content" -> ScalaAttributeNameMap("contentAttr"),
-      "form" -> ScalaAttributeNameMap("formId"),
-      "height" -> ScalaAttributeNameMap("heightAttr"),
-      "width" -> ScalaAttributeNameMap("widthAttr"),
-      "list" -> ScalaAttributeNameMap("listId"),
-      "contextmenu" -> ScalaAttributeNameMap("contextMenuId"),
-      "hreflang" -> ScalaAttributeNameMap("hrefLang"),
-      "tabindex" -> ScalaAttributeNameMap("tabIndex"),
-      "autofocus" -> ScalaAttributeNameMap("autoFocus"),
-      "autocomplete" -> ScalaAttributeNameMap("autoComplete"),
-      "readonly" -> ScalaAttributeNameMap("readOnly"),
-    ) ++ ConverterType.eventAttributeNameMap
+    override val tagNameMap: Map[String, String] =
+      Map(
+        "style" -> "styleTag",
+        "link" -> "linkTag",
+        "param" -> "paramTag",
+        "map" -> "mapTag",
+        "title" -> "titleTag",
+        "object" -> "objectTag",
+        "noscript" -> "noScript",
+        "textarea" -> "textArea"
+      )
+
+    override val attributeNameMap: Map[String, AttributeType] =
+      ScalaJSReact.dataAttributes ++ Map(
+        "class" -> StringAttribute("cls"),
+        "for" -> StringAttribute("forId"),
+        "type" -> StringAttribute("tpe"),
+        "value" -> StringAttribute("defaultValue"),
+        "checked" -> StringAttribute("defaultChecked"),
+        "selected" -> StringAttribute("defaultSelected"),
+        "for" -> StringAttribute("forId"),
+        "id" -> StringAttribute("idAttr"),
+        "max" -> StringAttribute("maxAttr"),
+        "min" -> StringAttribute("minAttr"),
+        "step" -> StringAttribute("stepAttr"),
+        "offset" -> StringAttribute("offsetAttr"),
+        "result" -> StringAttribute("resultAttr"),
+        "loading" -> StringAttribute("loadingAttr"),
+        "style" -> StringAttribute("styleAttr"),
+        "content" -> StringAttribute("contentAttr"),
+        "form" -> StringAttribute("formId"),
+        "height" -> IntAttribute("heightAttr"),
+        "width" -> IntAttribute("widthAttr"),
+        "list" -> StringAttribute("listId"),
+        "contextmenu" -> StringAttribute("contextMenuId"),
+      ) ++ EventAttribute.reactAndLaminarEventAttributes
+  }
 }

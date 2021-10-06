@@ -4,10 +4,12 @@ import org.scalajs.dom
 import org.scalajs.dom.ext._
 import org.scalajs.dom.html.TextArea
 import org.scalajs.dom.raw.{DOMParser, NamedNodeMap, Node}
+import simer.html.converter.ConverterType.{Laminar, ScalaJSReact, ScalaTags}
 
 import scala.scalajs.js
+import scala.util.Try
 
-object HtmlToScalaTagsConverter {
+object HtmlToScalaConverter {
 
   def main(args: Array[String]): Unit = {
     val template = HTMLTemplate.template(runConverter)
@@ -77,10 +79,10 @@ object HtmlToScalaTagsConverter {
 
         if (scalaAttrList.isEmpty && children.isEmpty) {
           converterType match {
-            case _: LaminarConverter =>
+            case _: Laminar =>
               s"$nodeString()" //laminar requires nodes to be closed eg: br()
 
-            case _: ReactScalaTagsConverter | _: ScalaTagsConverter =>
+            case _: ScalaJSReact | _: ScalaTags =>
               nodeString
           }
         } else { //this node/tag has attributes or has children
@@ -129,44 +131,78 @@ object HtmlToScalaTagsConverter {
     if (js.isUndefined(attributes) || attributes.isEmpty)
       List.empty
     else
-      attributes.map {
+      attributes map {
         case (attrKey, attrValue) =>
           val attrValueString = attrValue.value
           val escapedAttrValue = tripleQuote(attrValueString)
           val attributeNameMapOption = converterType.attributeNameMap.get(attrKey)
 
-          attrKey match {
-            case "style" =>
-              val styleValuesDictionary =
-                converterType match {
-                  case _: ReactScalaTagsConverter | _: ScalaTagsConverter =>
-                    //if scalatags or scalajs-react convert the style value to dictionary
-                    s"js.Dictionary(${splitAttrValueToTuples(attrValueString)})"
+          if (attrKey == "style") {
+            val styleValuesDictionary =
+              converterType match {
+                case _: ScalaJSReact | _: ScalaTags =>
+                  //if scalatags or scalajs-react convert the style value to dictionary
+                  s"js.Dictionary(${splitAttrValueToTuples(attrValueString)})"
 
-                  case _: LaminarConverter =>
-                    //for laminar do not split. Simply return the javascript string value.
-                    escapedAttrValue
-                }
-
-              attributeNameMapOption match {
-                case Some(attrNameMap) =>
-                  s"""${converterType.attributePrefix}${attrNameMap.keyName} ${attrNameMap.functionName} $styleValuesDictionary"""
-
-                case None =>
-                  s"""${converterType.attributePrefix}$attrKey := $styleValuesDictionary"""
+                case _: Laminar =>
+                  //for laminar do not split. Simply return the javascript string value.
+                  escapedAttrValue
               }
 
-            case _ =>
-              attributeNameMapOption match {
-                case Some(attrNameMap) =>
-                  s"${converterType.attributePrefix}${attrNameMap.keyName} ${attrNameMap.functionName} $escapedAttrValue"
+            attributeNameMapOption match {
+              case Some(attrNameMap) =>
+                s"""${converterType.attributePrefix}${attrNameMap.key} ${attrNameMap.function} $styleValuesDictionary"""
 
-                case None =>
-                  if (attrKey.matches("[a-zA-Z0-9]*$"))
-                    s"${converterType.attributePrefix}$attrKey := $escapedAttrValue"
-                  else //else it's a custom attribute
-                    s"""${converterType.customAttributeFunctionName}("$attrKey") := $escapedAttrValue"""
-              }
+              case None =>
+                s"""${converterType.attributePrefix}$attrKey := $styleValuesDictionary"""
+            }
+          } else {
+            attributeNameMapOption match {
+              case Some(attrNameMap) =>
+
+                val typedValue =
+                  attrNameMap match {
+                    case _: AttributeType.StringAttribute =>
+                      escapedAttrValue
+
+                    case _: AttributeType.IntAttribute =>
+                      //if unable to convert to int or else revert back to string
+                      Try(attrValueString.toInt) getOrElse escapedAttrValue
+
+                    case _: AttributeType.DoubleAttribute =>
+                      //if unable to convert to double or else revert back to string
+                      Try(attrValueString.toDouble) getOrElse escapedAttrValue
+
+                    case _: AttributeType.BooleanAttribute =>
+                      //if unable to convert to boolean or else revert back to string
+                      //Note: In HTML the value of boolean attribute can be set to anything to enable it.
+                      //      This should be looked into manually to handle cases where there could be some
+                      //      javascript code dependant on the actual value.
+                      Try(attrValueString.toBoolean) getOrElse escapedAttrValue
+
+                    case _: AttributeType.EventAttribute =>
+                      //Event attributes get converted to however the target library's expected syntax.
+                      //https://github.com/simerplaha/html-to-scalatags-converter/issues/9
+                      converterType match {
+                        case _: ScalaJSReact =>
+                          s"""Callback(js.eval($escapedAttrValue))"""
+
+                        case _: ScalaTags =>
+                          escapedAttrValue
+
+                        case _: Laminar =>
+                          s"""(_ => js.eval($escapedAttrValue))"""
+                      }
+                  }
+
+                s"${converterType.attributePrefix}${attrNameMap.key} ${attrNameMap.function} $typedValue"
+
+              case None =>
+                if (attrKey.matches("[a-zA-Z0-9]*$"))
+                  s"${converterType.attributePrefix}$attrKey := $escapedAttrValue"
+                else //else it's a custom attribute
+                  s"""${converterType.customAttributeFunctionName}("$attrKey") := $escapedAttrValue"""
+            }
           }
       }
 
