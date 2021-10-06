@@ -70,16 +70,24 @@ object HTMLTemplate {
         ),
         tr(width := "100%")(
           td(colspan := "3", textAlign := "center")(
-            button(cls := "button -salmon center", onclick := { () => onConvertClicked(ScalaJSReact(isNewLineAttributes)) })("Convert to Scalajs-React's VDOM (1.7.7)"),
+            button(cls := "button scalajs-react center", onclick := { () => onConvertClicked(ScalaJSReact(isNewLineAttributes)) })("ScalaJS-React (1.7.7)"),
             span("  "),
-            button(cls := "button -salmon center", onclick := { () => onConvertClicked(ScalaTags(isNewLineAttributes)) })("Convert to Scalatags (0.9.4)"),
+            button(cls := "button scalatags center", onclick := { () => onConvertClicked(ScalaTags(isNewLineAttributes)) })("ScalaTags (0.9.4)"),
             span("  "),
-            button(cls := "button -salmon center", onclick := { () => onConvertClicked(Laminar(isNewLineAttributes)) })("Convert to Laminar (0.13.1)")
+            button(cls := "button laminar center", onclick := { () => onConvertClicked(Laminar(isNewLineAttributes)) })("Laminar (0.13.1)")
           ),
         ),
         tr(width := "100%")(
           td(colspan := "2", textAlign := "center", paddingTop := "15px")(
-            a(cls := "github-button", href := "https://github.com/simerplaha/html-to-scalatags-converter", attr("data-icon") := "octicon-star", attr("data-size") := "large", attr("data-show-count") := "true", attr("aria-label") := "Star simerplaha/html-to-scalatags-converter on GitHub", "Star"),
+            a(
+              cls := "github-button",
+              href := "https://github.com/simerplaha/html-to-scalatags-converter",
+              attr("data-icon") := "octicon-star",
+              attr("data-size") := "large",
+              attr("data-show-count") := "true",
+              attr("aria-label") := "Star simerplaha/html-to-scalatags-converter on GitHub",
+              "Star"
+            ),
           )
         )
       )

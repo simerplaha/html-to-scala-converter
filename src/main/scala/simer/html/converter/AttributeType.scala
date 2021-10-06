@@ -30,7 +30,7 @@ object AttributeType {
                               function: String = ":=") extends AttributeType
 
   object EventAttribute {
-    //a Map of Event attributes shared by ScalaJS-react and Laminar
+    //Event attributes shared by ScalaJS-react and Laminar
     val reactAndLaminarEventAttributes =
       Map(
         s"onchange" -> EventAttribute("onChange"),

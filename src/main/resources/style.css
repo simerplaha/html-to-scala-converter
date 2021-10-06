@@ -123,6 +123,20 @@ h1 {
     background: #F32C52;
 }
 
+.button.scalajs-react {
+    color: black;
+    background: #61dafb;
+}
+
+.button.laminar {
+    color: #FFFFFF;
+    background: #dc322f;
+}
+
+.button.scalatags {
+    color: #FFFFFF;
+    background: rgb(31, 141, 214);
+}
 
 textarea {
     margin-top: 10px;
