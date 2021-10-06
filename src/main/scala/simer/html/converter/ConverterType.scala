@@ -66,6 +66,9 @@ object ConverterType {
         "spellcheck" -> BooleanAttribute("spellCheck"),
         "contextmenu" -> StringAttribute("contextMenu"),
         "autocapitalize" -> StringAttribute("autoCapitalize"),
+        "cellpadding" -> StringAttribute("cellPadding"),
+        "cellspacing" -> StringAttribute("cellSpacing"),
+        "classid"-> StringAttribute("classID"),
       )
   }
 
@@ -140,6 +143,8 @@ object ConverterType {
         "width" -> IntAttribute("widthAttr"),
         "list" -> StringAttribute("listId"),
         "contextmenu" -> StringAttribute("contextMenuId"),
+        "optgroup" -> StringAttribute("optGroup"),
+        "fieldset" -> StringAttribute("fieldSet"),
       ) ++ EventAttribute.reactAndLaminarEventAttributes
   }
 }
