@@ -117,7 +117,9 @@ object ConverterType {
         "title" -> "titleTag",
         "object" -> "objectTag",
         "noscript" -> "noScript",
-        "textarea" -> "textArea"
+        "textarea" -> "textArea",
+        "optgroup" -> "optGroup",
+        "fieldset" -> "fieldSet"
       )
 
     override val attributeNameMap: Map[String, AttributeType] =
@@ -143,8 +145,6 @@ object ConverterType {
         "width" -> IntAttribute("widthAttr"),
         "list" -> StringAttribute("listId"),
         "contextmenu" -> StringAttribute("contextMenuId"),
-        "optgroup" -> StringAttribute("optGroup"),
-        "fieldset" -> StringAttribute("fieldSet"),
       ) ++ EventAttribute.reactAndLaminarEventAttributes
   }
 }
