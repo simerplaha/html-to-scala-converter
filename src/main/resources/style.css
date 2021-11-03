@@ -28,6 +28,7 @@ html, body {
     height: 100%;
     margin: 0;
     padding: 0;
+    background-color: #2c2c2c;
 }
 
 #section {
@@ -55,6 +56,11 @@ html, body {
 
 .content {
     /*border: 1px dashed red;*/
+}
+
+#content {
+    background-color: #2c2c2c;
+    color: white;
 }
 
 h1 {
@@ -124,8 +130,8 @@ h1 {
 }
 
 .button.scalajs-react {
-    color: black;
     background: #61dafb;
+    color: black;
 }
 
 .button.laminar {
@@ -134,7 +140,7 @@ h1 {
 }
 
 .button.scalatags {
-    color: #FFFFFF;
+    color: black;
     background: rgb(31, 141, 214);
 }
 
@@ -145,13 +151,13 @@ textarea {
     -moz-border-left-colors: none;
     -moz-border-right-colors: none;
     -moz-border-top-colors: none;
-    background: none repeat scroll 0 0 #fbfbfb;
+    background: none repeat scroll 0 0 #262424;
     border-image: none;
     border-radius: 6px 6px 6px 6px;
     border-style: none solid solid none;
     border-width: medium 1px 1px medium;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12) inset;
-    color: #555555;
+    color: #b9b9b9;
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     font-size: 14px;
     line-height: 1.4em;
@@ -161,7 +167,7 @@ textarea {
 
 
 textarea:focus {
-    background: none repeat scroll 0 0 #FFFFFF;
+    background: none repeat scroll 0 0 #2a2828;
     outline-width: 0;
 }
 
@@ -199,7 +205,7 @@ input[type="checkbox"] + label:before {
     content: '';
     width: 20px;
     height: 20px;
-    border: 1px solid #000000;
+    border: 2px solid white;
     position: absolute;
     left: 0;
     top: 0;
