@@ -1,10 +1,10 @@
 enablePlugins(ScalaJSPlugin)
 
-name := "HtmlToScalaConverter"
+name := "html-to-scala-converter"
 
 version := "1.0.0"
 
-scalaVersion := "2.13.6"
+scalaVersion := "2.13.7"
 
 scalaJSUseMainModuleInitializer := true
 
