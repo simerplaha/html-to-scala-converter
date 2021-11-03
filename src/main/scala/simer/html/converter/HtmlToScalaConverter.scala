@@ -182,7 +182,7 @@ object HtmlToScalaConverter {
 
                     case _: AttributeType.EventAttribute =>
                       //Event attributes get converted to however the target library's expected syntax.
-                      //https://github.com/simerplaha/html-to-scalatags-converter/issues/9
+                      //https://github.com/simerplaha/html-to-scala-converter/issues/9
                       converterType match {
                         case _: ScalaJSReact =>
                           s"""Callback(js.eval($escapedAttrValue))"""

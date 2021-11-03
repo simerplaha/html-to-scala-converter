@@ -17,7 +17,7 @@ object HTMLTemplate {
         ),
         li(float := "right",
           u(
-            a(href := "https://github.com/simerplaha/html-to-scalatags-converter/issues", target := "blank")("Report an issue")
+            a(href := "https://github.com/simerplaha/html-to-scala-converter/issues", target := "blank")("Report an issue")
           )
         )
       ),
@@ -81,11 +81,11 @@ object HTMLTemplate {
           td(colspan := "2", textAlign := "center", paddingTop := "15px")(
             a(
               cls := "github-button",
-              href := "https://github.com/simerplaha/html-to-scalatags-converter",
+              href := "https://github.com/simerplaha/html-to-scala-converter",
               attr("data-icon") := "octicon-star",
               attr("data-size") := "large",
               attr("data-show-count") := "true",
-              attr("aria-label") := "Star simerplaha/html-to-scalatags-converter on GitHub",
+              attr("aria-label") := "Star simerplaha/html-to-scala-converter on GitHub",
               "Star"
             ),
           )
