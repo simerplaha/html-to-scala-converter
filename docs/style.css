@@ -1,0 +1,221 @@
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #000000;
+    box-shadow: 3px 3px 4px #292323;
+}
+
+li {
+    float: left;
+}
+
+li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+li a:hover {
+    background-color: #000000;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#section {
+    width: 100%;
+    min-height: 100%;
+    display: table;
+    height: inherit;
+}
+
+.row {
+    width: 100%;
+    height: 100%;
+    display: table-row;
+}
+
+.col-left, .col-right {
+    width: 50%;
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.col-right {
+    text-align: center;
+}
+
+.content {
+    /*border: 1px dashed red;*/
+}
+
+h1 {
+    font-family: sans-serif;
+}
+
+.boxsizingBorder {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.button {
+    overflow: hidden;
+    margin: 10px;
+    padding: 12px 12px;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-transition: all 60ms ease-in-out;
+    transition: all 60ms ease-in-out;
+    text-align: center;
+    white-space: nowrap;
+    text-decoration: none !important;
+    text-transform: none;
+    text-transform: capitalize;
+    color: #fff;
+    border: 0 none;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.3;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-flex: 0;
+    -ms-flex: 0 0 160px;
+    flex: 0 0 160px;
+    box-shadow: 2px 5px 10px rgba(22, 22, 22, 0.1);
+}
+.button:hover {
+    -webkit-transition: all 60ms ease;
+    transition: all 60ms ease;
+    opacity: .85;
+}
+.button:active {
+    -webkit-transition: all 60ms ease;
+    transition: all 60ms ease;
+    opacity: .75;
+}
+.button:focus {
+    outline: 1px dotted #959595;
+    outline-offset: -4px;
+}
+
+.button.-salmon {
+    color: #FFFFFF;
+    background: #F32C52;
+}
+
+.button.scalajs-react {
+    color: black;
+    background: #61dafb;
+}
+
+.button.laminar {
+    color: #FFFFFF;
+    background: #dc322f;
+}
+
+.button.scalatags {
+    color: #FFFFFF;
+    background: rgb(31, 141, 214);
+}
+
+textarea {
+    margin-top: 10px;
+    margin-left: 5px;
+    -moz-border-bottom-colors: none;
+    -moz-border-left-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-top-colors: none;
+    background: none repeat scroll 0 0 #fbfbfb;
+    border-image: none;
+    border-radius: 6px 6px 6px 6px;
+    border-style: none solid solid none;
+    border-width: medium 1px 1px medium;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12) inset;
+    color: #555555;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14px;
+    line-height: 1.4em;
+    padding: 5px 8px;
+    transition: background-color 0.1s ease 0s;
+}
+
+
+textarea:focus {
+    background: none repeat scroll 0 0 #FFFFFF;
+    outline-width: 0;
+}
+
+
+h1 {
+    text-align: center;
+    -webkit-transition: opacity 180ms ease;
+    transition: opacity 180ms ease;
+    color: #161616;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-size: 32px;
+    font-weight: 700;
+}
+h1 span {
+    font-weight: 400;
+}/*Checkboxes styles*/
+input[type="checkbox"] { display: none; }
+
+input[type="checkbox"] + label {
+    position: relative;
+    padding-left: 35px;
+    margin-bottom: 20px;
+    padding-top: 2px;
+    font: 14px/20px 'Open Sans', Arial, sans-serif;
+
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+input[type="checkbox"] + label:last-child { margin-bottom: 0; }
+
+input[type="checkbox"] + label:before {
+    content: '';
+    width: 20px;
+    height: 20px;
+    border: 1px solid #000000;
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: .6;
+    -webkit-transition: all .12s, border-color .08s;
+    transition: all .12s, border-color .08s;
+}
+
+input[type="checkbox"]:checked + label:before {
+    width: 10px;
+    top: -5px;
+    left: 5px;
+    border-radius: 0;
+    opacity: 1;
+    border-top-color: transparent;
+    border-left-color: transparent;
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
