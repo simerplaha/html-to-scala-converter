@@ -7,6 +7,7 @@ sealed trait ConverterType {
   val nodePrefix: String
   val customAttributeFunctionName: String
   val newLineAttributes: Boolean
+  val isBooleanTypeConversionDisabled: Boolean
   //stores name conversions for html attribute names to scala names
   val attributeNameMap: Map[String, AttributeType]
   val tagNameMap: Map[String, String]
@@ -72,7 +73,8 @@ object ConverterType {
       )
   }
 
-  case class ScalaJSReact(newLineAttributes: Boolean) extends ConverterType {
+  case class ScalaJSReact(newLineAttributes: Boolean,
+                          isBooleanTypeConversionDisabled: Boolean) extends ConverterType {
     val attributePrefix: String = "^."
     val nodePrefix: String = "<."
     val customAttributeFunctionName: String = "VdomAttr"
@@ -87,7 +89,8 @@ object ConverterType {
       ScalaJSReact.dataAttributes ++ EventAttribute.reactAndLaminarEventAttributes
   }
 
-  case class ScalaTags(newLineAttributes: Boolean) extends ConverterType {
+  case class ScalaTags(newLineAttributes: Boolean,
+                       isBooleanTypeConversionDisabled: Boolean) extends ConverterType {
     val attributePrefix: String = ""
     val nodePrefix: String = ""
     val customAttributeFunctionName: String = "attr"
@@ -103,7 +106,8 @@ object ConverterType {
       )
   }
 
-  case class Laminar(newLineAttributes: Boolean) extends ConverterType {
+  case class Laminar(newLineAttributes: Boolean,
+                     isBooleanTypeConversionDisabled: Boolean) extends ConverterType {
     val attributePrefix: String = ""
     val nodePrefix: String = ""
     val customAttributeFunctionName: String = "dataAttr"
@@ -128,7 +132,7 @@ object ConverterType {
         "for" -> StringAttribute("forId"),
         "type" -> StringAttribute("tpe"),
         "value" -> StringAttribute("defaultValue"),
-        "checked" -> StringAttribute("defaultChecked"),
+        "checked" -> BooleanAttribute("defaultChecked"),
         "selected" -> StringAttribute("defaultSelected"),
         "for" -> StringAttribute("forId"),
         "id" -> StringAttribute("idAttr"),

@@ -178,7 +178,10 @@ object HtmlToScalaConverter {
                       //Note: In HTML the value of boolean attribute can be set to anything to enable it.
                       //      This should be looked into manually to handle cases where there could be some
                       //      javascript code dependant on the actual value.
-                      Try(attrValueString.toBoolean) getOrElse escapedAttrValue
+                      if (converterType.isBooleanTypeConversionDisabled)
+                        escapedAttrValue
+                      else
+                        true
 
                     case _: AttributeType.EventAttribute =>
                       //Event attributes get converted to however the target library's expected syntax.

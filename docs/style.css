@@ -219,3 +219,8 @@ input[type="checkbox"]:checked + label:before {
     -webkit-transform: rotate(45deg);
     transform: rotate(45deg);
 }
+
+.github-button {
+    padding-top: 10px;
+    padding-left: 4px;
+}

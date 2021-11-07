@@ -9,15 +9,24 @@ object HTMLTemplate {
 
   def isNewLineAttributes = !dom.document.getElementById("newlineAttributes").asInstanceOf[Input].checked
 
+  def isBooleanTypeConversionDisabled = dom.document.getElementById("disableBooleanTypeConversion").asInstanceOf[Input].checked
+
   def template(onConvertClicked: ConverterType => Unit) =
     div(
       ul(
         li(
           a(href := "#")("HTML TO SCALA CONVERTER")
         ),
-        li(float := "right",
+        li(float := "right", paddingTop := 10.px, paddingRight := 10.px,
           u(
-            a(href := "https://github.com/simerplaha/html-to-scala-converter/issues", target := "blank")("Report an issue")
+            a(
+              cls := "github-button",
+              href := "https://github.com/simerplaha/html-to-scala-converter",
+              attr("data-size") := "large",
+              attr("data-show-count") := "true",
+              attr("aria-label") := "Star simerplaha/html-to-scala-converter on GitHub",
+              "Star"
+            )
           )
         )
       ),
@@ -52,6 +61,9 @@ object HTMLTemplate {
                 |           List&nbsp;item&nbsp;2
                 |       </li>
                 |    </ul>
+                |    <input type="checkbox" checked />
+                |    <input type="checkbox" checked="false" />
+                |    <input type="checkbox" checked="blah!" />
                 |    <script>
                 |       document.getElementById("someId").value = "Hello Scala.js!";
                 |    </script>
@@ -62,32 +74,43 @@ object HTMLTemplate {
             textarea(id := "scalaTagsCode", cls := "boxsizingBorder", width := "100%", rows := 26, placeholder := "Scala code will be generated here.")
           )
         ),
-        tr(width := "100%")(
-          td(colspan := "2", textAlign := "center", paddingBottom := "10px")(
+        tr(width := "50%")(
+          td(colspan := "1", textAlign := "right", paddingBottom := "10px", paddingRight := "25px")(
             input(`type` := "checkbox", id := "newlineAttributes"),
-            label(`for` := "newlineAttributes", "Add properties on newline"),
+            label(`for` := "newlineAttributes", "Add attributes on newline"),
+          ),
+          td(colspan := "1", textAlign := "left", paddingBottom := "10px", paddingLeft := "10px")(
+            input(`type` := "checkbox", id := "disableBooleanTypeConversion"),
+            label(`for` := "disableBooleanTypeConversion", "Disable Boolean type conversion"),
           )
         ),
         tr(width := "100%")(
           td(colspan := "3", textAlign := "center")(
-            button(cls := "button scalajs-react center", onclick := { () => onConvertClicked(ScalaJSReact(isNewLineAttributes)) })("ScalaJS-React (1.7.7)"),
+            button(cls := "button scalajs-react center", onclick := { () => onConvertClicked(ScalaJSReact(isNewLineAttributes, isBooleanTypeConversionDisabled)) })("ScalaJS-React (1.7.7)"),
             span("  "),
-            button(cls := "button scalatags center", onclick := { () => onConvertClicked(ScalaTags(isNewLineAttributes)) })("ScalaTags (0.9.4)"),
+            button(cls := "button scalatags center", onclick := { () => onConvertClicked(ScalaTags(isNewLineAttributes, isBooleanTypeConversionDisabled)) })("ScalaTags (0.9.4)"),
             span("  "),
-            button(cls := "button laminar center", onclick := { () => onConvertClicked(Laminar(isNewLineAttributes)) })("Laminar (0.13.1)")
+            button(cls := "button laminar center", onclick := { () => onConvertClicked(Laminar(isNewLineAttributes, isBooleanTypeConversionDisabled)) })("Laminar (0.13.1)")
           ),
         ),
         tr(width := "100%")(
-          td(colspan := "2", textAlign := "center", paddingTop := "15px")(
-            a(
-              cls := "github-button",
-              href := "https://github.com/simerplaha/html-to-scala-converter",
-              attr("data-icon") := "octicon-star",
-              attr("data-size") := "large",
-              attr("data-show-count") := "true",
-              attr("aria-label") := "Star simerplaha/html-to-scala-converter on GitHub",
-              "Star"
+          td(colspan := "3", textAlign := "center")(
+            p(
+              strong(""""Add attributes on newline""""),
+              " inserts a new line after each tag attribute/property.",
             ),
+            p(
+              strong(""""Disable Boolean type conversion""""),
+              " converts ",
+              span(backgroundColor := "#dddcdc" ,"""checked = "blah!""""),
+              " to ",
+              span(backgroundColor := "#dddcdc" ,"""checked := "blah!""""),
+              " instead of ",
+              span(backgroundColor := "#dddcdc" ,"""checked := true"""),
+            ),
+            p(
+              "Type conversions are enabled for ScalaJS-React & Laminar. Please report any missing types."
+            )
           )
         )
       )
