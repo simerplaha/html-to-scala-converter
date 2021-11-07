@@ -2,4 +2,4 @@
 
 Online converter: https://simerplaha.github.io/html-to-scala-converter/
 
-## NOTE: Repo name has been renamed from `html-to-scala-converter` to `html-to-scala-converter` so check out the updated link.
+## NOTE: Repo name has been renamed from `html-to-scalatags-converter` to `html-to-scala-converter` so check out the updated link.
