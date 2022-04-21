@@ -4,7 +4,7 @@ import org.scalajs.dom
 import org.scalajs.dom.ext._
 import org.scalajs.dom.html.TextArea
 import org.scalajs.dom.raw.{DOMParser, NamedNodeMap, Node}
-import simer.html.converter.ConverterType.{Laminar, ScalaJSReact, ScalaTags}
+import simer.html.converter.ConverterType.{Outwatch, Laminar, ScalaJSReact, ScalaTags}
 
 import scala.scalajs.js
 import scala.util.Try
@@ -82,7 +82,7 @@ object HtmlToScalaConverter {
             case _: Laminar =>
               s"$nodeString()" //laminar requires nodes to be closed eg: br()
 
-            case _: ScalaJSReact | _: ScalaTags =>
+            case _: ScalaJSReact | _: ScalaTags | _: Outwatch =>
               nodeString
           }
         } else { //this node/tag has attributes or has children
@@ -144,8 +144,8 @@ object HtmlToScalaConverter {
                   //if scalatags or scalajs-react convert the style value to dictionary
                   s"js.Dictionary(${splitAttrValueToTuples(attrValueString)})"
 
-                case _: Laminar =>
-                  //for laminar do not split. Simply return the javascript string value.
+                case _: Laminar | _: Outwatch =>
+                  //for laminar/outwatch do not split. Simply return the javascript string value.
                   escapedAttrValue
               }
 
@@ -193,8 +193,9 @@ object HtmlToScalaConverter {
                         case _: ScalaTags =>
                           escapedAttrValue
 
-                        case _: Laminar =>
+                        case _: Laminar | _: Outwatch =>
                           s"""(_ => js.eval($escapedAttrValue))"""
+
                       }
                   }
 

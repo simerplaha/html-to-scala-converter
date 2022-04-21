@@ -86,7 +86,7 @@ object ConverterType {
       )
 
     override val attributeNameMap: Map[String, AttributeType] =
-      ScalaJSReact.dataAttributes ++ EventAttribute.reactAndLaminarEventAttributes
+      ScalaJSReact.dataAttributes ++ EventAttribute.reactAndLaminarAndOutwatchEventAttributes
   }
 
   case class ScalaTags(newLineAttributes: Boolean,
@@ -149,6 +149,54 @@ object ConverterType {
         "width" -> IntAttribute("widthAttr"),
         "list" -> StringAttribute("listId"),
         "contextmenu" -> StringAttribute("contextMenuId"),
-      ) ++ EventAttribute.reactAndLaminarEventAttributes
+      ) ++ EventAttribute.reactAndLaminarAndOutwatchEventAttributes
+  }
+
+  case class Outwatch(newLineAttributes: Boolean,
+                     isBooleanTypeConversionDisabled: Boolean) extends ConverterType {
+    val attributePrefix: String = ""
+    val nodePrefix: String = ""
+    val customAttributeFunctionName: String = "VModifier.attr"
+
+    override val tagNameMap: Map[String, String] =
+      Map(
+        "style" -> "styleTag",
+        "link" -> "linkTag",
+        "param" -> "paramTag",
+        "map" -> "mapTag",
+        "title" -> "titleTag",
+        "object" -> "objectTag",
+        "noscript" -> "noScript",
+        "textarea" -> "textArea",
+        "optgroup" -> "optGroup",
+        "fieldset" -> "fieldSet"
+      )
+
+    override val attributeNameMap: Map[String, AttributeType] =
+      ScalaJSReact.dataAttributes ++ Map(
+        "class" -> StringAttribute("cls"),
+        "for" -> StringAttribute("forId"),
+        "type" -> StringAttribute("tpe"),
+        "value" -> StringAttribute("value"),
+        "checked" -> BooleanAttribute("checked"),
+        "selected" -> StringAttribute("selected"),
+        "for" -> StringAttribute("forId"),
+        "id" -> StringAttribute("idAttr"),
+        "max" -> StringAttribute("maxAttr"),
+        "min" -> StringAttribute("minAttr"),
+        "step" -> StringAttribute("stepAttr"),
+        "offset" -> StringAttribute("offsetAttr"),
+        "result" -> StringAttribute("resultAttr"),
+        "loading" -> StringAttribute("loadingAttr"),
+        "style" -> StringAttribute("styleAttr"),
+        "content" -> StringAttribute("contentAttr"),
+        "form" -> StringAttribute("formId"),
+        "height" -> IntAttribute("heightAttr"),
+        "width" -> IntAttribute("widthAttr"),
+        "list" -> StringAttribute("listId"),
+        "contextmenu" -> StringAttribute("contextMenuId"),
+      ) ++ EventAttribute.reactAndLaminarAndOutwatchEventAttributes.map { case (key, attr) =>
+        (key, attr.copy(function = "foreach"))
+      }
   }
 }
