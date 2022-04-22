@@ -133,6 +133,11 @@ h1 {
     background: #dc322f;
 }
 
+.button.outwatch {
+    color: #FFFFFF;
+    background: #8278fb;
+}
+
 .button.scalatags {
     color: #FFFFFF;
     background: rgb(31, 141, 214);

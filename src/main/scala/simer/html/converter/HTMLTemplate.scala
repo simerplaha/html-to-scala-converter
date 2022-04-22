@@ -3,7 +3,7 @@ package simer.html.converter
 import org.scalajs.dom
 import org.scalajs.dom.html.Input
 import scalatags.JsDom.all._
-import simer.html.converter.ConverterType.{Laminar, ScalaJSReact, ScalaTags}
+import simer.html.converter.ConverterType.{Outwatch, Laminar, ScalaJSReact, ScalaTags}
 
 object HTMLTemplate {
 
@@ -90,7 +90,9 @@ object HTMLTemplate {
             span("  "),
             button(cls := "button scalatags center", onclick := { () => onConvertClicked(ScalaTags(isNewLineAttributes, isBooleanTypeConversionDisabled)) })("ScalaTags (0.9.4)"),
             span("  "),
-            button(cls := "button laminar center", onclick := { () => onConvertClicked(Laminar(isNewLineAttributes, isBooleanTypeConversionDisabled)) })("Laminar (0.13.1)")
+            button(cls := "button laminar center", onclick := { () => onConvertClicked(Laminar(isNewLineAttributes, isBooleanTypeConversionDisabled)) })("Laminar (0.13.1)"),
+            span("  "),
+            button(cls := "button outwatch center", onclick := { () => onConvertClicked(Outwatch(isNewLineAttributes, isBooleanTypeConversionDisabled)) })("Outwatch (1.0.0-RC7)")
           ),
         ),
         tr(width := "100%")(
@@ -109,7 +111,7 @@ object HTMLTemplate {
               span(backgroundColor := "#dddcdc" ,"""checked := true"""),
             ),
             p(
-              "Type conversions are enabled for ScalaJS-React & Laminar. Please report any missing types."
+              "Type conversions are enabled for ScalaJS-React, Laminar & Outwatch. Please report any missing types."
             )
           )
         )
