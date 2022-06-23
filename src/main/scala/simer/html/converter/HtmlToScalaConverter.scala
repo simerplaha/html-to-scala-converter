@@ -4,7 +4,7 @@ import org.scalajs.dom
 import org.scalajs.dom.ext._
 import org.scalajs.dom.html.TextArea
 import org.scalajs.dom.raw.{DOMParser, NamedNodeMap, Node}
-import simer.html.converter.ConverterType.{Outwatch, Laminar, ScalaJSReact, ScalaTags}
+import simer.html.converter.ConverterType.{Laminar, Outwatch, ScalaJSReact, ScalaTags, Tyrian}
 
 import scala.scalajs.js
 import scala.util.Try
@@ -65,49 +65,93 @@ object HtmlToScalaConverter {
                          childrenWithoutGarbageNodes: collection.Seq[Node],
                          children: String): String = {
 
-    val scalaAttrList = toScalaAttributes(attributes = node.attributes, converterType)
+    converterType match {
+      case converterType: Tyrian =>
+        node.nodeName match {
+          case "#text" =>
+            tripleQuote(node.nodeValue)
+          case _ =>
 
-    node.nodeName match {
-      case "#text" =>
-        tripleQuote(node.nodeValue)
-
-      case _ =>
-        val nodeNameLowerCase = node.nodeName.toLowerCase
-        //fetch the node/tag name supplied by the ConverterType
-        val replacedNodeName = converterType.tagNameMap.getOrElse(nodeNameLowerCase, nodeNameLowerCase)
-        val nodeString = s"${converterType.nodePrefix}$replacedNodeName"
-
-        if (scalaAttrList.isEmpty && children.isEmpty) {
-          converterType match {
-            case _: Laminar =>
-              s"$nodeString()" //laminar requires nodes to be closed eg: br()
-
-            case _: ScalaJSReact | _: ScalaTags | _: Outwatch =>
-              nodeString
-          }
-        } else { //this node/tag has attributes or has children
-          val scalaAttrString =
-            if (scalaAttrList.isEmpty)
-              ""
-            else if (!converterType.newLineAttributes)
-              scalaAttrList.mkString("\n", ",\n", "")
-            else
-              scalaAttrList.mkString(", ")
-
-          val childrenString =
-            if (children.isEmpty) {
+            val attrString = if (js.isUndefined(node.attributes) || node.attributes.isEmpty) {
               ""
             } else {
-              //text child nodes can be a part of the same List as the attribute List. They don't have to go to a new line.
-              val isChildNodeATextNode = childrenWithoutGarbageNodes.headOption.exists(_.nodeName == "#text")
-              val commaMayBe = if (scalaAttrString.isEmpty) "" else ","
-              val startNewLineMayBe = if (isChildNodeATextNode && (converterType.newLineAttributes || scalaAttrString.isEmpty)) "" else "\n"
-              //add a newLine at the end if this node has more then one child nodes
-              val endNewLineMayBe = if (isChildNodeATextNode && childrenWithoutGarbageNodes.size <= 1) "" else "\n"
-              s"$commaMayBe$startNewLineMayBe$children$endNewLineMayBe"
+              node.attributes.map { case (attributeKey, attributeValue) =>
+                val attributeType = converterType.attributeNameMap.find(a => a._1 == attributeKey)
+
+                attributeType match {
+                  case Some((_, attrType)) => s"${attrType.key} := ${tripleQuote(attributeValue.value)}"
+                  case None => s"Attribute(\"$attributeKey\", ${tripleQuote(attributeValue.value)})"
+                }
+              }.mkString(", ")
+
             }
 
-          s"$nodeString($scalaAttrString$childrenString)"
+            val innerString = if (childrenWithoutGarbageNodes.nonEmpty) {
+              s"(\n$children)"
+            } else if (converterType.noChildTags.contains(node.nodeName.toLowerCase)) {
+              ""
+            } else {
+              "()"
+            }
+
+            val tagName = converterType.tagNameMap.get(node.nodeName.toLowerCase)
+
+            tagName match {
+              case Some(tag) => s"$tag($attrString)$innerString"
+              case None => s"tag(\"${node.nodeName.toLowerCase}\")($attrString)$innerString"
+            }
+        }
+      case _ =>
+        val scalaAttrList = toScalaAttributes(attributes = node.attributes, converterType)
+
+        node.nodeName match {
+          case "#text" =>
+            tripleQuote(node.nodeValue)
+
+          case _ =>
+            val nodeNameLowerCase = node.nodeName.toLowerCase
+            //fetch the node/tag name supplied by the ConverterType
+            val replacedNodeName = converterType.tagNameMap.getOrElse(nodeNameLowerCase, nodeNameLowerCase)
+            val nodeString = s"${converterType.nodePrefix}$replacedNodeName"
+
+            if (scalaAttrList.isEmpty && children.isEmpty) {
+              converterType match {
+                case _: Laminar =>
+                  s"$nodeString()" //laminar requires nodes to be closed eg: br()
+
+                case _: ScalaJSReact | _: ScalaTags | _: Outwatch | _: Tyrian =>
+                  nodeString
+
+              }
+            } else { //this node/tag has attributes or has children
+              val scalaAttrString =
+                if (scalaAttrList.isEmpty)
+                  ""
+                else if (!converterType.newLineAttributes)
+                  scalaAttrList.mkString("\n", ",\n", "")
+                else
+                  scalaAttrList.mkString(", ")
+
+              val childrenString =
+                if (children.isEmpty) {
+                  ""
+                } else {
+                  //text child nodes can be a part of the same List as the attribute List. They don't have to go to a new line.
+                  val isChildNodeATextNode = childrenWithoutGarbageNodes.headOption.exists(_.nodeName == "#text")
+                  val commaMayBe = if (scalaAttrString.isEmpty || converterType.isInstanceOf[Tyrian]) "" else ","
+                  val startNewLineMayBe = if (isChildNodeATextNode && (converterType.newLineAttributes || scalaAttrString.isEmpty)) "" else "\n"
+                  //add a newLine at the end if this node has more then one child nodes
+                  val endNewLineMayBe = if (isChildNodeATextNode && childrenWithoutGarbageNodes.size <= 1) "" else "\n"
+                  s"$commaMayBe$startNewLineMayBe$children$endNewLineMayBe"
+                }
+
+              converterType match {
+                case _: Tyrian =>
+                  s"$nodeString($scalaAttrString)($childrenString)"
+                case _ =>
+                  s"$nodeString($scalaAttrString$childrenString)"
+              }
+            }
         }
     }
   }
@@ -144,7 +188,7 @@ object HtmlToScalaConverter {
                   //if scalatags or scalajs-react convert the style value to dictionary
                   s"js.Dictionary(${splitAttrValueToTuples(attrValueString)})"
 
-                case _: Laminar | _: Outwatch =>
+                case _: Laminar | _: Outwatch | _: Tyrian =>
                   //for laminar/outwatch do not split. Simply return the javascript string value.
                   escapedAttrValue
               }
@@ -190,7 +234,7 @@ object HtmlToScalaConverter {
                         case _: ScalaJSReact =>
                           s"""Callback(js.eval($escapedAttrValue))"""
 
-                        case _: ScalaTags =>
+                        case _: ScalaTags | _: Tyrian =>
                           escapedAttrValue
 
                         case _: Laminar | _: Outwatch =>

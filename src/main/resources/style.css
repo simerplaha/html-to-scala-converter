@@ -138,6 +138,11 @@ h1 {
     background: #8278fb;
 }
 
+.button.tyrian {
+    color: #FFFFFF;
+    background: #4f46e5;
+}
+
 .button.scalatags {
     color: #FFFFFF;
     background: rgb(31, 141, 214);
