@@ -19,10 +19,10 @@ object HtmlToScalaConverter {
   def runConverter(converterType: ConverterType): Unit = {
     val htmlCode = dom.document.getElementById("htmlCode").asInstanceOf[TextArea].value
     val parsedHtml = new DOMParser().parseFromString(htmlCode, "text/html")
-    val scalaCodeTextArea = dom.document.getElementById("scalaTagsCode").asInstanceOf[TextArea]
+    val scalaCodeTextArea = dom.document.getElementById("scalaCode").asInstanceOf[TextArea]
     val rootChildNodes = removeGarbageChildNodes(parsedHtml)
     //having more then one HTML tree causes the DOMParser to generate an incorrect tree.
-    val scalaCodes = rootChildNodes.map(toScalaTags(_, converterType))
+    val scalaCodes = rootChildNodes.map(toScala(_, converterType))
     val scalaCode =
       if (scalaCodes.size > 1) {
         val fixMe = s"""//FIXME - MULTIPLE HTML TREES PASSED TO THE CONVERTER. THIS MIGHT GENERATE UNEXPECTED CODE. Check <!DOCTYPE html> is not in the input HTML."""
@@ -41,29 +41,29 @@ object HtmlToScalaConverter {
     js.isUndefined(node) || node.nodeName == "#comment" || (node.nodeName == "#text" && node.nodeValue.trim.isEmpty)
 
   /**
-    * Recursively generates the output Scalatag's code for each HTML node and it's children.
+    * Recursively generates the output Scala code for each HTML node and it's children.
     *
     * Filters out comments and empty text's nodes (garbage nodes :D) from the input HTML before converting to Scala.
     */
-  def toScalaTags(node: Node, converterType: ConverterType): String = {
+  def toScala(node: Node, converterType: ConverterType): String = {
     //removes all comment and empty text nodes.
     val childrenWithoutGarbageNodes: collection.Seq[Node] = removeGarbageChildNodes(node)
 
     val children =
       childrenWithoutGarbageNodes
-        .map(toScalaTags(_, converterType))
+        .map(toScala(_, converterType))
         .mkString(",\n")
 
-    toScalaTag(node, converterType, childrenWithoutGarbageNodes, children)
+    toScala(node, converterType, childrenWithoutGarbageNodes, children)
   }
 
   /**
     * Converts a single HTML node, given it's child nodes's (@param children) already converted.
     */
-  private def toScalaTag(node: Node,
-                         converterType: ConverterType,
-                         childrenWithoutGarbageNodes: collection.Seq[Node],
-                         children: String): String = {
+  private def toScala(node: Node,
+                      converterType: ConverterType,
+                      childrenWithoutGarbageNodes: collection.Seq[Node],
+                      children: String): String = {
 
     converterType match {
       case _: Tyrian =>
@@ -176,7 +176,7 @@ object HtmlToScalaConverter {
     }.mkString(", ")
 
   /**
-    * Converts HTML node attributes to Scalatags attributes
+    * Converts HTML node attributes to Scala attributes
     */
   def toScalaAttributes(attributes: NamedNodeMap,
                         converterType: ConverterType): Iterable[String] =

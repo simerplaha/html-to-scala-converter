@@ -71,7 +71,7 @@ object HTMLTemplate {
             )
           ),
           td(width := "50%")(
-            textarea(id := "scalaTagsCode", cls := "boxsizingBorder", width := "100%", rows := 26, placeholder := "Scala code will be generated here.")
+            textarea(id := "scalaCode", cls := "boxsizingBorder", width := "100%", rows := 26, placeholder := "Scala code will be generated here.")
           )
         ),
         tr(width := "50%")(
