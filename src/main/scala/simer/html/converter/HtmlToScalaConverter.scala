@@ -5,6 +5,8 @@ import org.scalajs.dom.ext._
 import org.scalajs.dom.html.TextArea
 import org.scalajs.dom.raw.{DOMParser, NamedNodeMap, Node}
 import simer.html.converter.ConverterType._
+import simer.html.converter.tyrian.TyrianConverter
+import simer.html.converter.utils._
 
 import scala.scalajs.js
 import scala.util.Try
@@ -67,48 +69,7 @@ object HtmlToScalaConverter {
 
     converterType match {
       case _: Tyrian =>
-        import simer.html.converter.tyrian._
-        import simer.html.converter.tyrian.TyrianAttributes.{Normal, NoValue}
-        import simer.html.converter.tyrian.TyrianTags.{NoChildren, OptionalChildren}
-
-        node.nodeName match {
-          case "#text" =>
-            tripleQuote(node.nodeValue)
-          case _ =>
-
-            val attrString = if (js.isUndefined(node.attributes) || node.attributes.isEmpty) {
-              ""
-            } else {
-              val (separatorStart, separator, separatorEnd) = if (!converterType.newLineAttributes) {
-                ("(\n", ",\n", "\n)")
-              } else {
-                ("(", ", ", ")")
-              }
-              node.attributes.map { case (attributeKey, attributeValue) =>
-                val attributeType = TyrianAttributes.attrs.find(a => a.attrName.getOrElse(a.name) == attributeKey)
-
-                attributeType match {
-                  case Some(attr: NoValue) if !converterType.isBooleanTypeConversionDisabled => attr.name
-                  case Some(attr: Normal) => s"${attr.name} := ${tripleQuote(attributeValue.value)}"
-                  case _ => s"Attribute(\"$attributeKey\", ${tripleQuote(attributeValue.value)})"
-                }
-              }.mkString(separatorStart, separator, separatorEnd)
-
-            }
-
-            val tagType = TyrianTags.tags.find(t => t.tag.getOrElse(t.name) == node.nodeName.toLowerCase)
-
-            val innerString = tagType match {
-              case Some(_: NoChildren) | Some(_: OptionalChildren) => ""
-              case _ if childrenWithoutGarbageNodes.nonEmpty => s"(\n$children)"
-              case _ => "()"
-            }
-
-            tagType match {
-              case Some(tag) => s"${tag.name}$attrString$innerString"
-              case None => s"tag(\"${node.nodeName.toLowerCase}\")$attrString$innerString"
-            }
-        }
+        TyrianConverter.toScala(node, converterType, childrenWithoutGarbageNodes, children)
       case _ =>
         val scalaAttrList = toScalaAttributes(attributes = node.attributes, converterType)
 
@@ -282,14 +243,5 @@ object HtmlToScalaConverter {
           case Some(_) =>
             newScalaCode
         }
-    }
-
-  def tripleQuote(string: String): String =
-    string.trim match {
-      case string if string.contains("\"") || string.contains("\n") || string.contains("\\") =>
-        s"""\"\"\"$string\"\"\""""
-
-      case string =>
-        s""""$string""""
     }
 }
