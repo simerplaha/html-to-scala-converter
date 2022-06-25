@@ -1,4 +1,4 @@
-package simer.html.converter
+package simer.html.converter.tyrian
 
 object TyrianAttributes {
   def attrs: List[AttributeType] =

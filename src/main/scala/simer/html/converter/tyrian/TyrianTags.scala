@@ -1,4 +1,4 @@
-package simer.html.converter
+package simer.html.converter.tyrian
 
 object TyrianTags {
 

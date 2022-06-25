@@ -67,8 +67,9 @@ object HtmlToScalaConverter {
 
     converterType match {
       case _: Tyrian =>
-        import simer.html.converter.TyrianAttributes.{NoValue, Normal}
-        import simer.html.converter.TyrianTags.{NoChildren, OptionalChildren}
+        import simer.html.converter.tyrian._
+        import simer.html.converter.tyrian.TyrianAttributes.{Normal, NoValue}
+        import simer.html.converter.tyrian.TyrianTags.{NoChildren, OptionalChildren}
 
         node.nodeName match {
           case "#text" =>
