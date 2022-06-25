@@ -205,9 +205,7 @@ object ConverterType {
     override val attributePrefix: String = ""
     override val nodePrefix: String = ""
     override val customAttributeFunctionName: String = "Attribute"
-    override val attributeNameMap: Map[String, AttributeType] =
-      Map("class" -> StringAttribute("`class`"), "type" -> StringAttribute("`type`"))
-    override val tagNameMap: Map[String, String] = Map("style" -> "style", "div" -> "div", "br" -> "br")
-    val noChildTags: Set[String] = Set("br")
+    override val attributeNameMap: Map[String, AttributeType] = Map.empty
+    override val tagNameMap: Map[String, String] = Map.empty
   }
 }

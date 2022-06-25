@@ -4,7 +4,7 @@ import org.scalajs.dom
 import org.scalajs.dom.ext._
 import org.scalajs.dom.html.TextArea
 import org.scalajs.dom.raw.{DOMParser, NamedNodeMap, Node}
-import simer.html.converter.ConverterType.{Laminar, Outwatch, ScalaJSReact, ScalaTags, Tyrian}
+import simer.html.converter.ConverterType._
 
 import scala.scalajs.js
 import scala.util.Try
@@ -66,7 +66,10 @@ object HtmlToScalaConverter {
                          children: String): String = {
 
     converterType match {
-      case converterType: Tyrian =>
+      case _: Tyrian =>
+        import simer.html.converter.TyrianAttributes.{NoValue, Normal}
+        import simer.html.converter.TyrianTags.{NoChildren, OptionalChildren}
+
         node.nodeName match {
           case "#text" =>
             tripleQuote(node.nodeValue)
@@ -75,30 +78,34 @@ object HtmlToScalaConverter {
             val attrString = if (js.isUndefined(node.attributes) || node.attributes.isEmpty) {
               ""
             } else {
+              val (separatorStart, separator, separatorEnd) = if (!converterType.newLineAttributes) {
+                ("(\n", ",\n", "\n)")
+              } else {
+                ("(", ", ", ")")
+              }
               node.attributes.map { case (attributeKey, attributeValue) =>
-                val attributeType = converterType.attributeNameMap.find(a => a._1 == attributeKey)
+                val attributeType = TyrianAttributes.attrs.find(a => a.attrName.getOrElse(a.name) == attributeKey)
 
                 attributeType match {
-                  case Some((_, attrType)) => s"${attrType.key} := ${tripleQuote(attributeValue.value)}"
-                  case None => s"Attribute(\"$attributeKey\", ${tripleQuote(attributeValue.value)})"
+                  case Some(attr: NoValue) if !converterType.isBooleanTypeConversionDisabled => attr.name
+                  case Some(attr: Normal) => s"${attr.name} := ${tripleQuote(attributeValue.value)}"
+                  case _ => s"Attribute(\"$attributeKey\", ${tripleQuote(attributeValue.value)})"
                 }
-              }.mkString(", ")
+              }.mkString(separatorStart, separator, separatorEnd)
 
             }
 
-            val innerString = if (childrenWithoutGarbageNodes.nonEmpty) {
-              s"(\n$children)"
-            } else if (converterType.noChildTags.contains(node.nodeName.toLowerCase)) {
-              ""
-            } else {
-              "()"
+            val tagType = TyrianTags.tags.find(t => t.tag.getOrElse(t.name) == node.nodeName.toLowerCase)
+
+            val innerString = tagType match {
+              case Some(_: NoChildren) | Some(_: OptionalChildren) => ""
+              case _ if childrenWithoutGarbageNodes.nonEmpty => s"(\n$children)"
+              case _ => "()"
             }
 
-            val tagName = converterType.tagNameMap.get(node.nodeName.toLowerCase)
-
-            tagName match {
-              case Some(tag) => s"$tag($attrString)$innerString"
-              case None => s"tag(\"${node.nodeName.toLowerCase}\")($attrString)$innerString"
+            tagType match {
+              case Some(tag) => s"${tag.name}$attrString$innerString"
+              case None => s"tag(\"${node.nodeName.toLowerCase}\")$attrString$innerString"
             }
         }
       case _ =>
