@@ -69,7 +69,7 @@ object ConverterType {
         "autocapitalize" -> StringAttribute("autoCapitalize"),
         "cellpadding" -> StringAttribute("cellPadding"),
         "cellspacing" -> StringAttribute("cellSpacing"),
-        "classid"-> StringAttribute("classID"),
+        "classid" -> StringAttribute("classID"),
       )
   }
 
@@ -153,7 +153,7 @@ object ConverterType {
   }
 
   case class Outwatch(newLineAttributes: Boolean,
-                     isBooleanTypeConversionDisabled: Boolean) extends ConverterType {
+                      isBooleanTypeConversionDisabled: Boolean) extends ConverterType {
     val attributePrefix: String = ""
     val nodePrefix: String = ""
     val customAttributeFunctionName: String = "VModifier.attr"
@@ -198,5 +198,14 @@ object ConverterType {
       ) ++ EventAttribute.reactAndLaminarAndOutwatchEventAttributes.map { case (key, attr) =>
         (key, attr.copy(function = "foreach"))
       }
+  }
+
+  case class Tyrian(newLineAttributes: Boolean,
+                    isBooleanTypeConversionDisabled: Boolean) extends ConverterType {
+    override val attributePrefix: String = ""
+    override val nodePrefix: String = ""
+    override val customAttributeFunctionName: String = "Attribute"
+    override val attributeNameMap: Map[String, AttributeType] = Map.empty
+    override val tagNameMap: Map[String, String] = Map.empty
   }
 }

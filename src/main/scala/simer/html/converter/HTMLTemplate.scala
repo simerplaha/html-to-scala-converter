@@ -3,7 +3,7 @@ package simer.html.converter
 import org.scalajs.dom
 import org.scalajs.dom.html.Input
 import scalatags.JsDom.all._
-import simer.html.converter.ConverterType.{Outwatch, Laminar, ScalaJSReact, ScalaTags}
+import simer.html.converter.ConverterType.{Outwatch, Laminar, ScalaJSReact, ScalaTags, Tyrian}
 
 object HTMLTemplate {
 
@@ -92,7 +92,10 @@ object HTMLTemplate {
             span("  "),
             button(cls := "button laminar center", onclick := { () => onConvertClicked(Laminar(isNewLineAttributes, isBooleanTypeConversionDisabled)) })("Laminar (0.13.1)"),
             span("  "),
-            button(cls := "button outwatch center", onclick := { () => onConvertClicked(Outwatch(isNewLineAttributes, isBooleanTypeConversionDisabled)) })("Outwatch (1.0.0-RC7)")
+            button(cls := "button outwatch center", onclick := { () => onConvertClicked(Outwatch(isNewLineAttributes, isBooleanTypeConversionDisabled)) })("Outwatch (1.0.0-RC7)"),
+            span("  "),
+            button(cls := "button tyrian center", onclick := { () => onConvertClicked(Tyrian(isNewLineAttributes, isBooleanTypeConversionDisabled)) })("Tyrian (0.5.1)")
+
           ),
         ),
         tr(width := "100%")(
