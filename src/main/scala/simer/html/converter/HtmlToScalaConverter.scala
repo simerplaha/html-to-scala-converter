@@ -69,9 +69,19 @@ object HtmlToScalaConverter {
 
     converterType match {
       case _: Tyrian =>
-        TyrianConverter.toScala(node, converterType, childrenWithoutGarbageNodes, children)
-      case _         =>
-        val scalaAttrList = toScalaAttributes(attributes = node.attributes, converterType)
+        TyrianConverter.toScala(
+          node = node,
+          converterType = converterType,
+          childrenWithoutGarbageNodes = childrenWithoutGarbageNodes,
+          children = children
+        )
+
+      case _ =>
+        val scalaAttrList =
+          toScalaAttributes(
+            attributes = node.attributes,
+            converterType = converterType
+          )
 
         node.nodeName match {
           case "#text" =>
