@@ -1,6 +1,7 @@
-package simer.html.converter
+package simer.html.converter.utils
 
-package object utils {
+object ConverterUtil {
+
   def tripleQuote(string: String): String =
     string.trim match {
       case string if string.contains("\"") || string.contains("\n") || string.contains("\\") =>
@@ -9,4 +10,5 @@ package object utils {
       case string =>
         s""""$string""""
     }
+
 }

@@ -6,7 +6,7 @@ import org.scalajs.dom.html.TextArea
 import org.scalajs.dom.raw.{DOMParser, NamedNodeMap, Node}
 import simer.html.converter.ConverterType._
 import simer.html.converter.tyrian.TyrianConverter
-import simer.html.converter.utils._
+import simer.html.converter.utils.ConverterUtil._
 
 import scala.scalajs.js
 import scala.util.Try
@@ -70,7 +70,7 @@ object HtmlToScalaConverter {
     converterType match {
       case _: Tyrian =>
         TyrianConverter.toScala(node, converterType, childrenWithoutGarbageNodes, children)
-      case _ =>
+      case _         =>
         val scalaAttrList = toScalaAttributes(attributes = node.attributes, converterType)
 
         node.nodeName match {
@@ -117,7 +117,7 @@ object HtmlToScalaConverter {
               converterType match {
                 case _: Tyrian =>
                   s"$nodeString($scalaAttrString)($childrenString)"
-                case _ =>
+                case _         =>
                   s"$nodeString($scalaAttrString$childrenString)"
               }
             }

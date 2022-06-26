@@ -1,13 +1,13 @@
 package simer.html.converter.tyrian
 
+import org.scalajs.dom.ext._
 import org.scalajs.dom.raw.Node
 import simer.html.converter.ConverterType
-import simer.html.converter.utils._
+import simer.html.converter.tyrian.TyrianAttributes.{Normal, NoValue}
+import simer.html.converter.tyrian.TyrianTags.{NoChildren, OptionalChildren}
+import simer.html.converter.utils.ConverterUtil._
 
 import scala.scalajs.js
-import org.scalajs.dom.ext._
-import simer.html.converter.tyrian.TyrianAttributes.{NoValue, Normal}
-import simer.html.converter.tyrian.TyrianTags.{NoChildren, OptionalChildren}
 
 object TyrianConverter {
   def toScala(node: Node,
