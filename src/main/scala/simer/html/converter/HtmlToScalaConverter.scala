@@ -77,17 +77,17 @@ object HtmlToScalaConverter {
         )
 
       case _ =>
-        val scalaAttrList =
-          toScalaAttributes(
-            attributes = node.attributes,
-            converterType = converterType
-          )
-
         node.nodeName match {
           case "#text" =>
             tripleQuote(node.nodeValue)
 
           case _ =>
+            val scalaAttrList =
+              toScalaAttributes(
+                attributes = node.attributes,
+                converterType = converterType
+              )
+
             val nodeNameLowerCase = node.nodeName.toLowerCase
             //fetch the node/tag name supplied by the ConverterType
             val replacedNodeName = converterType.tagNameMap.getOrElse(nodeNameLowerCase, nodeNameLowerCase)
@@ -117,7 +117,7 @@ object HtmlToScalaConverter {
                 } else {
                   //text child nodes can be a part of the same List as the attribute List. They don't have to go to a new line.
                   val isChildNodeATextNode = childrenWithoutGarbageNodes.headOption.exists(_.nodeName == "#text")
-                  val commaMayBe = if (scalaAttrString.isEmpty || converterType.isInstanceOf[Tyrian]) "" else ","
+                  val commaMayBe = if (scalaAttrString.isEmpty) "" else ","
                   val startNewLineMayBe = if (isChildNodeATextNode && (converterType.newLineAttributes || scalaAttrString.isEmpty)) "" else "\n"
                   //add a newLine at the end if this node has more then one child nodes
                   val endNewLineMayBe = if (isChildNodeATextNode && childrenWithoutGarbageNodes.size <= 1) "" else "\n"
