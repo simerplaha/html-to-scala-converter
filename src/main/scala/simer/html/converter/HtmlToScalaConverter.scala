@@ -127,7 +127,8 @@ object HtmlToScalaConverter {
               converterType match {
                 case _: Tyrian =>
                   s"$nodeString($scalaAttrString)($childrenString)"
-                case _         =>
+
+                case _ =>
                   s"$nodeString($scalaAttrString$childrenString)"
               }
             }
